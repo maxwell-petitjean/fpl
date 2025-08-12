@@ -418,22 +418,10 @@
         "\n"
       ],
       "metadata": {
-        "colab": {
-          "base_uri": "https://localhost:8080/"
-        },
-        "id": "Nbk0iGNWDhKi",
-        "outputId": "0793ac13-598d-4bfd-f27f-3d555a029534"
+        "id": "Nbk0iGNWDhKi"
       },
-      "execution_count": 11,
-      "outputs": [
-        {
-          "output_type": "stream",
-          "name": "stdout",
-          "text": [
-            "mv: 'streamlit_app.py' and 'streamlit_app.py' are the same file\n"
-          ]
-        }
-      ]
+      "execution_count": null,
+      "outputs": []
     }
   ]
 }
