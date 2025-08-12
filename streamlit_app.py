@@ -7,20 +7,13 @@ Original file is located at
     https://colab.research.google.com/drive/1_0hsdxaRAhd8vlAnxlnX0lnG0JKzf33P
 """
 
-#!pip install --quiet streamlit pyngrok pulp pandas numpy requests
-
-from pyngrok import ngrok
-ngrok.set_auth_token("319sCAWPOoKGaew5JgWfTtBBRfA_rUmjNWqoVLNzfNue2Mri")  # <-- REPLACE
-
-# ================= Streamlit App Code =================
-streamlit_code = r"""
 import streamlit as st
 import pandas as pd
 import numpy as np
 import requests
 import pulp
 
-# ========== CONFIG ==========
+# ================== CONFIG ==================
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
 VAR_GW = 1
 VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
@@ -28,20 +21,23 @@ VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
 URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
 URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 
-# ========== PAGE CONFIG ==========
+# ================== STREAMLIT PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
 
-# ========== SIDEBAR INPUTS ==========
+# ================== SIDEBAR INPUTS ==================
 st.sidebar.header("⚙️ Input Parameters")
 fpl_id_input = st.sidebar.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
 exclude_names_input = st.sidebar.text_area("Exclude Names (comma separated)",value="Rayan Aït-Nouri, Bryan Mbeumo").split(",")
 exclude_teams_input = st.sidebar.text_area("Exclude Teams (comma separated)",value="BRE").split(",")
 
-include_names_input = st.sidebar.text_area("Include Names (comma separated)").split(",")
+include_names_input = st.sidebar.text_area(
+    "Include Names (comma separated)"
+).split(",")
+
 budget_input = st.sidebar.number_input("Budget", value=1000, step=1)
 
-# ========== HELPERS ==========
+# ================== HELPERS ==================
 @st.cache_data
 def load_csv(filename):
     url = GITHUB_BASE + filename
@@ -308,7 +304,7 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
 
     return selected_team, output
 
-# ========== RUN BUTTON ==========
+# ================== RUN BUTTON ==================
 if st.sidebar.button("🚀 Run Model"):
     exclude_names_clean = [n.strip() for n in exclude_names_input if n.strip()]
     exclude_teams_clean = [t.strip() for t in exclude_teams_input if t.strip()]
@@ -321,16 +317,16 @@ if st.sidebar.button("🚀 Run Model"):
             exclude_teams_clean,
             include_names_clean,
             budget_input
-    )
-
+        )
 
     st.success("✅ Model run complete!")
 
-    # Round all numeric columns
-    numeric_cols = final_team.select_dtypes(include=[np.number]).columns
-    final_team[numeric_cols] = final_team[numeric_cols].round(2)
+    # ======= Rounding for both DataFrames =======
+    for df in [final_team, raw_output]:
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        df[numeric_cols] = df[numeric_cols].round(2)
 
-    # Define position color map
+    # ======= Position color map =======
     def highlight_pos(val):
         color_map = {
             "GKP": "#FFD700",
@@ -340,58 +336,32 @@ if st.sidebar.button("🚀 Run Model"):
         }
         return f"background-color: {color_map.get(val, 'white')}"
 
-    # Create styled DataFrame with heatmap
-    styled_df = final_team.style.applymap(highlight_pos, subset=["pos"]) \
-                                .background_gradient(subset=numeric_cols, cmap="YlGnBu")
-
-    # Round numbers for real and force display format
-    numeric_cols = final_team.select_dtypes(include=[np.number]).columns
-    final_team[numeric_cols] = final_team[numeric_cols].round(2)
-
+    # ======= Styled by colour =======
     styled_df = final_team.style.applymap(highlight_pos, subset=["pos"]) \
                                 .background_gradient(subset=numeric_cols, cmap="YlGnBu") \
                                 .format(precision=2)
 
-
-    # Tabs
+    # ======= Tabs =======
     tab1, tab2, tab3 = st.tabs(["📋 Full Squad", "📊 Summary", "📄 Raw Output"])
 
-    # Tab 1 — Full Squad (same as before)
+    # Tab 1 — Final Squad
     with tab1:
+        numeric_cols = final_team.select_dtypes(include=[np.number]).columns
+        styled_df = final_team.style.applymap(highlight_pos, subset=["pos"]) \
+                                   .background_gradient(subset=numeric_cols, cmap="YlGnBu") \
+                                   .format(precision=2)
         st.dataframe(styled_df, use_container_width=True, height=800)
         csv = final_team.to_csv(index=False)
         st.download_button("⬇️ Download squad as CSV", csv, "squad.csv", "text/csv")
 
-    # Tab 2 — Summary (same as before)
+    # Tab 2 — Summary
     with tab2:
-        st.metric("💰 Total Cost", f"{final_team['cost'].sum():.1f}")
-        st.metric("📈 Total Points", f"{final_team['net_points'].sum():.1f}")
+        st.metric("💰 Total Cost", f"{final_team['cost'].sum():.2f}")
+        st.metric("📈 Total Points", f"{final_team['net_points'].sum():.2f}")
 
     # Tab 3 — Raw Output
     with tab3:
         numeric_cols_raw = raw_output.select_dtypes(include=[np.number]).columns
-        raw_output[numeric_cols_raw] = raw_output[numeric_cols_raw].round(2)
-        st.dataframe(
-            raw_output.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu"),
-            use_container_width=True,
-            height=800
-        )
-
-"""
-
-# Start Streamlit + ngrok tunnel
-import subprocess, time, sys, signal
-proc = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "streamlit_app.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-time.sleep(4)
-public_url = ngrok.connect(8501)
-print("🌍 Your Streamlit app is live here:", public_url)
-print("If it doesn't load immediately, wait ~10s and refresh.")
-
-# Keep alive
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    proc.send_signal(signal.SIGINT)
-
-# ✅ NOTE: You must replace the `pass` in run_model() with your actual optimiser code from your working script.
+        styled_raw = raw_output.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
+                                      .format(precision=2)
+        st.dataframe(styled_raw, use_container_width=True, height=800)
