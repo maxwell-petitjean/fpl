@@ -30,27 +30,6 @@ st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see
 
 
 # ================== MOBILE / DESKTOP DETECTION ==================
-st.markdown(
-    """
-    <style>
-    .fixed-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 15px 25px;
-        font-size: 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        z-index: 9999;
-    }
-    </style>
-    <button class="fixed-btn" onclick="window.location.reload()">🚀 Run Model</button>
-    """,
-    unsafe_allow_html=True
-)
 
 if "is_mobile" not in st.session_state:
     st.session_state.is_mobile = False
