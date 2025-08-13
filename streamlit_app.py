@@ -25,27 +25,100 @@ URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
 st.subheader("Optimise your Fantasy Premier League team in seconds")
+st.subheader("Hit 'Run Model' to get started")
 
-# ================== SIDEBAR INPUTS ==================
-st.sidebar.header("⚙️ Input Parameters")
-st.sidebar.subheader("Hit 'Run Model' to get started")
-fpl_id_input = st.sidebar.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
+st.subheader("Optimise your Fantasy Premier League team")
+if st.session_state.is_mobile:
+    st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
 
-exclude_names_input = st.sidebar.text_area(
-    "Exclude Names (comma separated)",
-    value="Rayan Aït-Nouri, Bryan Mbeumo"
-).split(",")
 
-exclude_teams_input = st.sidebar.text_area(
-    "Exclude Teams (comma separated)",
-    value="BRE"
-).split(",")
+# ================== MOBILE / DESKTOP DETECTION ==================
+st.markdown(
+    """
+    <style>
+    .fixed-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 9999;
+    }
+    </style>
+    <button class="fixed-btn" onclick="window.location.reload()">🚀 Run Model</button>
+    """,
+    unsafe_allow_html=True
+)
 
-include_names_input = st.sidebar.text_area(
-    "Include Names (comma separated)"
-).split(",")
+if "is_mobile" not in st.session_state:
+    st.session_state.is_mobile = False
 
-budget_input = st.sidebar.number_input("Budget", value=1000, step=1)
+if st.session_state.is_mobile:
+    st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
+
+
+# Listen for messages from the JS snippet
+import streamlit.components.v1 as components
+
+components.html(
+    """
+    <script>
+    window.addEventListener("message", (event) => {
+        if (event.data.isMobile !== undefined) {
+            const pyMsg = {is_mobile: event.data.isMobile};
+            window.parent.postMessage(pyMsg, "*");
+        }
+    });
+    </script>
+    """,
+    height=0
+)
+
+# ================== CUSTOM SIDEBAR STYLE ==================
+st.markdown(
+    """
+    <style>
+    [data-testid="stSidebar"] {
+        background-color: #f8f9fa;
+        padding-top: 20px;
+    }
+    [data-testid="stSidebar"] * {
+        font-size: 16px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ================== INPUT FORM LOGIC ==================
+def get_inputs():
+    fpl_id = st.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
+    exclude_names = st.text_area(
+        "Exclude Names (comma separated)",
+        value="Rayan Aït-Nouri, Bryan Mbeumo"
+    ).split(",")
+    exclude_teams = st.text_area(
+        "Exclude Teams (comma separated)",
+        value="BRE"
+    ).split(",")
+    include_names = st.text_area(
+        "Include Names (comma separated)"
+    ).split(",")
+    budget = st.number_input("Budget", value=1000, step=1)
+    return fpl_id, exclude_names, exclude_teams, include_names, budget
+
+# ================== MOBILE vs DESKTOP RENDER ==================
+if st.session_state.is_mobile:
+    with st.expander("⚙️ Input Parameters", expanded=True):
+        fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
+else:
+    st.sidebar.header("⚙️ Input Parameters")
+    fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
 
 # ================== HELPERS ==================
 @st.cache_data
