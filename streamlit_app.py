@@ -24,13 +24,9 @@ URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 # ================== STREAMLIT PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
-st.subheader("Optimise your Fantasy Premier League team in seconds")
-st.subheader("Hit 'Run Model' to get started")
-
 st.subheader("Optimise your Fantasy Premier League team")
-if st.session_state.is_mobile:
-    st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
-    st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
+st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
+st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
 
 
 # ================== MOBILE / DESKTOP DETECTION ==================
