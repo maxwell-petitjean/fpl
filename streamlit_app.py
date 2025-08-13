@@ -24,10 +24,12 @@ URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 # ================== STREAMLIT PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
+st.subheader("Optimise your Fantasy Premier League team in seconds")
 
 # ================== SIDEBAR INPUTS ==================
 st.sidebar.header("⚙️ Input Parameters")
-fpl_id_input = st.sidebar.text_input("FPL ID (leave blank to skip)")
+st.sidebar.subheader("Hit 'Run Model' to get started")
+fpl_id_input = st.sidebar.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
 
 exclude_names_input = st.sidebar.text_area(
     "Exclude Names (comma separated)",
@@ -345,7 +347,7 @@ if st.sidebar.button("🚀 Run Model"):
         return f"background-color: {color_map.get(val, 'white')}"
 
     # ======= Tabs =======
-    tab1, tab2, tab3 = st.tabs(["📋 Full Squad", "📊 Summary", "📄 Raw Output"])
+    tab1, tab2, tab3 = st.tabs(["📋 Full Squad", "📊 Summary", "📄 Research Players"])
 
     # Tab 1 — Final Squad
     with tab1:
