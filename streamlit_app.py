@@ -30,6 +30,7 @@ st.subheader("Hit 'Run Model' to get started")
 st.subheader("Optimise your Fantasy Premier League team")
 if st.session_state.is_mobile:
     st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
+    st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
 
 
 # ================== MOBILE / DESKTOP DETECTION ==================
@@ -57,9 +58,6 @@ st.markdown(
 
 if "is_mobile" not in st.session_state:
     st.session_state.is_mobile = False
-
-if st.session_state.is_mobile:
-    st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
 
 
 # Listen for messages from the JS snippet
