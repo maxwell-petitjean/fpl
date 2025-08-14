@@ -99,6 +99,7 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
     fixtures_prev = load_csv("fixtures_24.csv")
     fixtures_prev0 = load_csv("gws_24.csv")
     teams3 = load_csv("teams_24.csv")
+    xm_manual = load_csv("xm_manual.csv")
 
     # ---- Players - Previous Seasons ----
     players_prev_11 = players_prev_1[['first_name','second_name','element_type','total_points','minutes']]
@@ -263,10 +264,13 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
     player_data = player_data.drop(columns=['first_name', 'second_name'])
     player_data.columns = ['ep_fpl','flag_fpl','csp90_fpl','dcpp90_fpl','xgp90_fpl','xap90_fpl','name_fpl']
     players8 = players7.merge(player_data,left_on='name',right_on='name_fpl',how='left')
-    players8['xm'] = np.where(players8['flag_fpl'].isna(), players8['xm_lyf'], players8['xm_lyf'] * players8['flag_fpl'])
-    players8['xm'] = np.clip(players8['xm'], 0, 90)
+
+    #xmins
+    players8 = players8.merge(xm_manual,left_on='name_fpl',right_on='xm_name',how='left')
     players8['xm_l2y'] = players8['mins']/38
-    players8['xm'] = round((players8['xm'] + players8['xm_l2y']) / 2 ,2)
+    players8['xm_max'] = np.where(players8['flag_fpl'].isna(), players8['xm_lyf'], (players8['xm_lyf']/90) * players8['flag_fpl'])
+    players8['xm'] = round((players8['xm_max'] + players8['xm_l2y']) / 2 ,2)
+    players8['xm'] = np.where(players8['xm_manual'].isna(), players8['xm'], players8['xm_manual'])
 
     players9 = players8.copy()
     players9['xapp90_fpl'] = players9['xap90_fpl']*3
