@@ -31,12 +31,19 @@ st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see
 # ================== MOBILE / DESKTOP DETECTION ==================
 st.markdown("""
 <style>
+div.stElementContainer:nth-of-type(5) {
+    display: none;
+}
+div.stButton {
+    width: 100%;
+}
 div.stButton > button:first-child {
     background: linear-gradient(90deg, #4CAF50, #45a049);
     color: white;
     padding: 0.6em 2em;
     border-radius: 10px;
     border: none;
+    width: 100%;
     font-size: 18px;
     font-weight: bold;
     transition: all 0.3s ease;
@@ -343,10 +350,22 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
 
     weeks = ['gw1', 'gw2', 'gw3', 'gw4', 'gw5', 'gw6']
     week_vars = {w: pulp.LpVariable.dicts(f"Week_{w}", output.index, 0, 1, pulp.LpBinary) for w in weeks}
+
     for w in weeks:
         for i in output.index:
-            prob += week_vars[w][i] <= player_vars[i]
+            prob += week_vars[w][i] <= player_vars[i]  # Only selected players can start
+
+        # Exactly 11 starters
         prob += pulp.lpSum(week_vars[w][i] for i in output.index) == 11
+
+        # Weekly position constraints
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'GKP') == 1
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'DEF') >= 3
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'DEF') <= 5
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'MID') >= 2
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'MID') <= 5
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'FWD') >= 1
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i, 'pos'] == 'FWD') <= 3
 
     prob += pulp.lpSum(output.loc[i, w] * week_vars[w][i] for w in weeks for i in output.index)
     prob.solve()
