@@ -15,10 +15,18 @@ import pulp
 
 # ================== CONFIG ==================
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
+VAR_GW = 1
+VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
+VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
+URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
+URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 
 # ================== PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
+st.subheader("Optimise your Fantasy Premier League team")
+st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
+st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
 
 # ================== MOBILE DETECTION ==================
 # JS snippet to detect screen width
