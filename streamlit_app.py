@@ -29,27 +29,25 @@ st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-
 st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
 
 # ================== MOBILE / DESKTOP DETECTION ==================
-st.markdown(
-    """
-    <style>
-    .fixed-btn {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 15px 25px;
-        font-size: 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        z-index: 9999;
-    }
-    </style>
-    <button class="fixed-btn" onclick="window.location.reload()">🚀 Run Model</button>
-    """,
-    unsafe_allow_html=True
-)
+st.markdown("""
+<style>
+div.stButton > button:first-child {
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    color: white;
+    padding: 0.6em 2em;
+    border-radius: 10px;
+    border: none;
+    font-size: 18px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+div.stButton > button:first-child:hover {
+    background: linear-gradient(90deg, #45a049, #4CAF50);
+    transform: scale(1.05);
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 if "is_mobile" not in st.session_state:
     st.session_state.is_mobile = False
