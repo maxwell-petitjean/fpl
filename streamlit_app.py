@@ -27,7 +27,7 @@ st.title("⚽ FPL Optimiser")
 st.subheader("Optimise your Fantasy Premier League team")
 st.caption("Hit 'Run Model' to get started.")
 
-# ================== MOBILE / DESKTOP DETECTION ==================
+# ================== MARKDOWN ================================
 st.markdown("""
 <style>
 div.stElementContainer {
@@ -54,28 +54,6 @@ div.stButton > button:first-child:hover {
 </style>
 """, unsafe_allow_html=True)
 
-
-if "is_mobile" not in st.session_state:
-    st.session_state.is_mobile = False
-
-
-# Listen for messages from the JS snippet
-import streamlit.components.v1 as components
-
-components.html(
-    """
-    <script>
-    window.addEventListener("message", (event) => {
-        if (event.data.isMobile !== undefined) {
-            const pyMsg = {is_mobile: event.data.isMobile};
-            window.parent.postMessage(pyMsg, "*");
-        }
-    });
-    </script>
-    """,
-    height=0
-)
-
 # ================== INPUT FORM LOGIC ==================
 def get_inputs():
     fpl_id = st.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
@@ -93,7 +71,7 @@ def get_inputs():
     budget = st.number_input("Budget", value=1000, step=1)
     return fpl_id, exclude_names, exclude_teams, include_names, budget
 
-# ================== MOBILE vs DESKTOP RENDER ==================
+# ================== INPUT PARAMETERS ==================
 with st.expander("⚙️ Input Parameters", expanded=True):
     fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
 
