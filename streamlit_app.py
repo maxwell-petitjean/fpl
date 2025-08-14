@@ -287,6 +287,7 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
     for w in ['gw1','gw2','gw3','gw4','gw5','gw6']:
         players9[w] = round(players9[[f'op{w[-1]}','base_points']].mean(axis=1),2)
     players9['net_points'] = players9[[f'gw{i}' for i in range(1,7)]].sum(axis=1)
+    players9['net_points'] = np.where(players9['xm'].isna() , 0 , players9['net_points'] )
     players9['fdr'] = round(players9['fdr'],2)
 
     players10 = players9.sort_values(by='points', ascending=False)
@@ -410,7 +411,16 @@ if st.button("🚀 Run Model"):
 
     # Tab 3 — Raw Output
     with tab3:
-        numeric_cols_raw = raw_output.select_dtypes(include=[np.number]).columns
-        styled_raw = raw_output.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
+        # Sort by net_points first
+        raw_output = raw_output.sort_values(by="net_points", ascending=False)
+
+        # Position filter
+        positions = raw_output['pos'].unique().tolist()
+        pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
+        filtered_df = raw_output[raw_output['pos'].isin(pos_filter)]
+
+        # Style and display
+        numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
+        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
                                       .format(precision=2)
         st.dataframe(styled_raw, use_container_width=True, height=800)
