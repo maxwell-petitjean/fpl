@@ -15,42 +15,25 @@ import pulp
 
 # ================== CONFIG ==================
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
-VAR_GW = 1
-VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
-VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
-URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
-URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 
-# ================== STREAMLIT PAGE CONFIG ==================
+# ================== PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
-st.subheader("Optimise your Fantasy Premier League team")
-st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
-st.markdown("📱 **Tip:** On mobile, open the menu (☰) in the top-left to see more options.")
 
-
-# ================== MOBILE / DESKTOP DETECTION ==================
+# ================== MOBILE DETECTION ==================
+# JS snippet to detect screen width
+st.markdown(
+    """
+    <script>
+    const width = window.innerWidth;
+    window.parent.postMessage({isMobile: width < 768}, "*");
+    </script>
+    """,
+    unsafe_allow_html=True
+)
 
 if "is_mobile" not in st.session_state:
     st.session_state.is_mobile = False
-
-
-# Listen for messages from the JS snippet
-import streamlit.components.v1 as components
-
-components.html(
-    """
-    <script>
-    window.addEventListener("message", (event) => {
-        if (event.data.isMobile !== undefined) {
-            const pyMsg = {is_mobile: event.data.isMobile};
-            window.parent.postMessage(pyMsg, "*");
-        }
-    });
-    </script>
-    """,
-    height=0
-)
 
 # ================== CUSTOM SIDEBAR STYLE ==================
 st.markdown(
@@ -68,9 +51,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ================== INPUT FORM LOGIC ==================
+# ================== INPUT FUNCTION ==================
 def get_inputs():
-    fpl_id = st.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
+    fpl_id = st.text_input(
+        "FPL ID (not live yet - only available after gw1 fixtures consolidated data)"
+    )
     exclude_names = st.text_area(
         "Exclude Names (comma separated)",
         value="Rayan Aït-Nouri, Bryan Mbeumo"
@@ -83,21 +68,17 @@ def get_inputs():
         "Include Names (comma separated)"
     ).split(",")
     budget = st.number_input("Budget", value=1000, step=1)
-    return fpl_id, exclude_names, exclude_teams, include_names, budget
+    run_model_click = st.button("🚀 Run Model", use_container_width=True)
+    return fpl_id, exclude_names, exclude_teams, include_names, budget, run_model_click
 
-# ================== MOBILE vs DESKTOP RENDER ==================
+# ================== LAYOUT SWITCH ==================
 if st.session_state.is_mobile:
-    with st.expander("⚙️ Input Parameters", expanded=True):
-        fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
+    st.subheader("⚙️ Input Parameters")
+    st.caption("Hit 'Run Model' to get started. 📱 Open the menu (☰) at the top-left to change inputs.")
+    fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input, run_clicked = get_inputs()
 else:
     st.sidebar.header("⚙️ Input Parameters")
-    fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
-
-# ================== HELPERS ==================
-@st.cache_data
-def load_csv(filename):
-    url = GITHUB_BASE + filename
-    return pd.read_csv(url)
+    fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input, run_clicked = get_inputs()
 
 # ============= MODEL FUNCTION =============
 def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
@@ -314,54 +295,10 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
     output = output[['name','team','pos','pos_id','cost','ownership','net_points','xm','fdr','base_points','gw1','gw2','gw3','gw4','gw5','gw6']]
     output = output.head(220)
 
-    # ---- FPL ID Squad Fetch ----
-    if fpl_id:
-        picks_url = f"https://fantasy.premierleague.com/api/entry/{fpl_id}/event/{VAR_GW}/picks/"
-        picks_data = requests.get(picks_url).json()
-        player_ids = [p['element'] for p in picks_data['picks']]
-        players_data = requests.get(URL1).json()['elements']
-        id_to_name = {p['id']: p['web_name'] for p in players_data}
-        include_names = [id_to_name[pid] for pid in player_ids if pid in id_to_name]
 
-    # ---- LP Optimisation ----
-    prob = pulp.LpProblem("FPL_Team_Selection", pulp.LpMaximize)
-    player_vars = pulp.LpVariable.dicts("Player", output.index, 0, 1, pulp.LpBinary)
 
-    prob += pulp.lpSum(player_vars[i] for i in output.index) == 15
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'GKP') == 2
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'DEF') == 5
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'MID') == 5
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'FWD') == 3
-    prob += pulp.lpSum(output.loc[i, 'cost'] * player_vars[i] for i in output.index) <= budget
-
-    for team in output['team'].unique():
-        prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'team'] == team) <= 3
-
-    for i in output.index:
-        if output.loc[i, 'name'] in exclude_names or output.loc[i, 'team'] in exclude_teams:
-            prob += player_vars[i] == 0
-        if output.loc[i, 'name'] in include_names:
-            prob += player_vars[i] == 1
-
-    weeks = ['gw1', 'gw2', 'gw3', 'gw4', 'gw5', 'gw6']
-    week_vars = {w: pulp.LpVariable.dicts(f"Week_{w}", output.index, 0, 1, pulp.LpBinary) for w in weeks}
-    for w in weeks:
-        for i in output.index:
-            prob += week_vars[w][i] <= player_vars[i]
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index) == 11
-
-    prob += pulp.lpSum(output.loc[i, w] * week_vars[w][i] for w in weeks for i in output.index)
-    prob.solve()
-
-    selected_team = output[[player_vars[i].value() == 1 for i in output.index]].copy()
-    selected_team['starting_weeks'] = selected_team.index.map(lambda i: ', '.join([w for w in weeks if week_vars[w][i].value() == 1]))
-    selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'net_points'], ascending=[True, False, False])
-    selected_team = selected_team[['name','team','pos','cost','ownership','net_points','xm','fdr','base_points','gw1','gw2','gw3','gw4','gw5','gw6','starting_weeks']]
-
-    return selected_team, output
-
-# ================== RUN BUTTON ==================
-if st.sidebar.button("🚀 Run Model"):
+# ================== RUN MODEL ==================
+if run_clicked:
     exclude_names_clean = [n.strip() for n in exclude_names_input if n.strip()]
     exclude_teams_clean = [t.strip() for t in exclude_teams_input if t.strip()]
     include_names_clean = [n.strip() for n in include_names_input if n.strip()]
@@ -377,12 +314,12 @@ if st.sidebar.button("🚀 Run Model"):
 
     st.success("✅ Model run complete!")
 
-    # ======= Round numeric values =======
+    # Round numeric values
     for df in [final_team, raw_output]:
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         df[numeric_cols] = df[numeric_cols].round(2)
 
-    # ======= Position color map =======
+    # Position color mapping
     def highlight_pos(val):
         color_map = {
             "GKP": "#FFD700",
@@ -392,7 +329,7 @@ if st.sidebar.button("🚀 Run Model"):
         }
         return f"background-color: {color_map.get(val, 'white')}"
 
-    # ======= Tabs =======
+    # Tabs
     tab1, tab2, tab3 = st.tabs(["📋 Full Squad", "📊 Summary", "📄 Research Players"])
 
     # Tab 1 — Final Squad
@@ -410,7 +347,7 @@ if st.sidebar.button("🚀 Run Model"):
         st.metric("💰 Total Cost", f"{final_team['cost'].sum():.2f}")
         st.metric("📈 Total Points", f"{final_team['net_points'].sum():.2f}")
 
-    # Tab 3 — Raw Output
+    # Tab 3 — Research Players
     with tab3:
         numeric_cols_raw = raw_output.select_dtypes(include=[np.number]).columns
         styled_raw = raw_output.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
