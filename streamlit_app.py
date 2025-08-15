@@ -409,18 +409,38 @@ if st.button("🚀 Run Model"):
         st.metric("💰 Total Cost", f"{final_team['cost'].sum():.2f}")
         st.metric("📈 Total Points", f"{final_team['net_points'].sum():.2f}")
 
+    # --- Run Model only on click ---
+    if "model_results" not in st.session_state:
+        st.session_state.model_results = None
+
+    if run_clicked:
+        final_team, raw_output = run_model(
+            fpl_id_input if fpl_id_input else None,
+            exclude_names_input,
+            exclude_teams_input,
+            include_names_input,
+            budget_input
+        )
+        st.session_state.model_results = {
+            "final_team": final_team,
+            "raw_output": raw_output
+        }
+
     # Tab 3 — Raw Output
     with tab3:
-        # Sort by net_points first
-        raw_output = raw_output.sort_values(by="net_points", ascending=False)
+        if st.session_state.model_results is None:
+            st.info("Click 'Run Model' to see results.")
+        else:
+            raw_output = st.session_state.model_results["raw_output"]
 
-        # Position filter
-        positions = raw_output['pos'].unique().tolist()
-        pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
-        filtered_df = raw_output[raw_output['pos'].isin(pos_filter)]
+            # Sort & filter
+            raw_output = raw_output.sort_values(by="net_points", ascending=False)
+            positions = raw_output['pos'].unique().tolist()
+            pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
+            filtered_df = raw_output[raw_output['pos'].isin(pos_filter)]
 
-        # Style and display
-        numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
-        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
-                                      .format(precision=2)
-        st.dataframe(styled_raw, use_container_width=True, height=800)
+            # Style and display
+            numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
+            styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
+                                          .format(precision=2)
+            st.dataframe(styled_raw, use_container_width=True, height=800)
