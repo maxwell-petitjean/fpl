@@ -359,6 +359,12 @@ def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
 
     return selected_team, output
 
+# ===== SESSION STATE SETUP =====
+if "final_team" not in st.session_state:
+    st.session_state.final_team = None
+if "raw_output" not in st.session_state:
+    st.session_state.raw_output = None
+
 # ================== RUN BUTTON ==================
 if st.button("🚀 Run Model"):
     exclude_names_clean = [n.strip() for n in exclude_names_input if n.strip()]
@@ -376,10 +382,17 @@ if st.button("🚀 Run Model"):
 
     st.success("✅ Model run complete!")
 
-    # ======= Round numeric values =======
+    # Round numeric values
     for df in [final_team, raw_output]:
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         df[numeric_cols] = df[numeric_cols].round(2)
+
+    # Save to session state
+    st.session_state.final_team = final_team
+    st.session_state.raw_output = raw_output
+
+# ======= If model has results, show tabs =======
+if st.session_state.final_team is not None and st.session_state.raw_output is not None:
 
     # ======= Position color map =======
     def highlight_pos(val):
@@ -391,56 +404,32 @@ if st.button("🚀 Run Model"):
         }
         return f"background-color: {color_map.get(val, 'white')}"
 
-    # ======= Tabs =======
     tab1, tab2, tab3 = st.tabs(["📋 Full Squad", "📊 Summary", "📄 Research Players"])
 
-    # Tab 1 — Final Squad
+    # --- Tab 1 — Final Squad
     with tab1:
-        numeric_cols = final_team.select_dtypes(include=[np.number]).columns
-        styled_df = final_team.style.applymap(highlight_pos, subset=["pos"]) \
-                                   .background_gradient(subset=numeric_cols, cmap="YlGnBu") \
-                                   .format(precision=2)
+        numeric_cols = st.session_state.final_team.select_dtypes(include=[np.number]).columns
+        styled_df = st.session_state.final_team.style.applymap(highlight_pos, subset=["pos"]) \
+                                                    .background_gradient(subset=numeric_cols, cmap="YlGnBu") \
+                                                    .format(precision=2)
         st.dataframe(styled_df, use_container_width=True, height=800)
-        csv = final_team.to_csv(index=False)
+        csv = st.session_state.final_team.to_csv(index=False)
         st.download_button("⬇️ Download squad as CSV", csv, "squad.csv", "text/csv")
 
-    # Tab 2 — Summary
+    # --- Tab 2 — Summary
     with tab2:
-        st.metric("💰 Total Cost", f"{final_team['cost'].sum():.2f}")
-        st.metric("📈 Total Points", f"{final_team['net_points'].sum():.2f}")
+        st.metric("💰 Total Cost", f"{st.session_state.final_team['cost'].sum():.2f}")
+        st.metric("📈 Total Points", f"{st.session_state.final_team['net_points'].sum():.2f}")
 
-    # --- Run Model only on click ---
-    if "model_results" not in st.session_state:
-        st.session_state.model_results = None
-
-    if run_clicked:
-        final_team, raw_output = run_model(
-            fpl_id_input if fpl_id_input else None,
-            exclude_names_input,
-            exclude_teams_input,
-            include_names_input,
-            budget_input
-        )
-        st.session_state.model_results = {
-            "final_team": final_team,
-            "raw_output": raw_output
-        }
-
-    # Tab 3 — Raw Output
+    # --- Tab 3 — Raw Output with Position Filter ---
     with tab3:
-        if st.session_state.model_results is None:
-            st.info("Click 'Run Model' to see results.")
-        else:
-            raw_output = st.session_state.model_results["raw_output"]
+        raw_output = st.session_state.raw_output.sort_values(by="net_points", ascending=False)
 
-            # Sort & filter
-            raw_output = raw_output.sort_values(by="net_points", ascending=False)
-            positions = raw_output['pos'].unique().tolist()
-            pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
-            filtered_df = raw_output[raw_output['pos'].isin(pos_filter)]
+        positions = raw_output['pos'].unique().tolist()
+        pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
+        filtered_df = raw_output[raw_output['pos'].isin(pos_filter)]
 
-            # Style and display
-            numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
-            styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
-                                          .format(precision=2)
-            st.dataframe(styled_raw, use_container_width=True, height=800)
+        numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
+        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
+                                        .format(precision=2)
+        st.dataframe(styled_raw, use_container_width=True, height=800)
