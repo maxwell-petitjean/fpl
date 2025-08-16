@@ -107,14 +107,17 @@ if st.button("🚀 Run Model - Test Data for now"):
     include_names_clean = [n.strip() for n in include_names_input if n.strip()]
 
     with st.spinner("Optimising your squad... please wait ⏳"):
-        final_team, raw_output = run_model(
-            fpl_id_input if fpl_id_input else None,
-            exclude_names_clean,
-            exclude_teams_clean,
-            include_names_clean,
-            budget_input
-        )
-
+      try:
+          final_team, raw_output = run_model(
+              fpl_id_input if fpl_id_input else None,
+              exclude_names_clean,
+              exclude_teams_clean,
+              include_names_clean,
+              budget_input
+          )
+      except Exception as e:
+          st.error("⚠️ Something went wrong while running the model. Please try again.")
+          st.stop()
     st.success("✅ Model run complete!")
 
     # Round numeric values
