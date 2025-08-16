@@ -24,6 +24,7 @@ URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
 URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 
 # ================== STREAMLIT PAGE CONFIG ==================
+st.set_option("client.showErrorDetails", False)
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
 st.subheader("CURRENTLY ANALYSING DATA FROM GW"+VAR_GW_STR)
