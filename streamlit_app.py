@@ -24,7 +24,6 @@ URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
 URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 
 # ================== STREAMLIT PAGE CONFIG ==================
-st.set_option("client.showErrorDetails", False)
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
 st.subheader("CURRENTLY ANALYSING DATA FROM GW"+VAR_GW_STR)
@@ -108,7 +107,7 @@ if st.button("🚀 Run Model - Test Data for now"):
     include_names_clean = [n.strip() for n in include_names_input if n.strip()]
 
     with st.spinner("Optimising your squad... please wait ⏳"):
-          selected_team, raw_output = run_model(
+          selected_team, output = run_model(
               fpl_id_input if fpl_id_input else None,
               exclude_names_clean,
               exclude_teams_clean,
@@ -118,16 +117,16 @@ if st.button("🚀 Run Model - Test Data for now"):
     st.success("✅ Model run complete!")
 
     # Round numeric values
-    for df in [selected_team, raw_output]:
+    for df in [selected_team, output]:
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         df[numeric_cols] = df[numeric_cols].round(2)
 
     # Save to session state
-    st.session_state.selected_team = selected_team
-    st.session_state.raw_output = raw_output
+    st.session_state.final_team = selected_team
+    st.session_state.raw_output = output
 
 # ======= If model has results, show tabs =======
-if st.session_state.selected_team is not None and st.session_state.raw_output is not None:
+if st.session_state.final_team is not None and st.session_state.raw_output is not None:
 
     # ======= Position color map =======
     def highlight_pos(val):
