@@ -16,6 +16,8 @@ import pulp
 # ================== CONFIG ==================
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
 VAR_GW = 1
+VAR_GW_STR = str(VAR_GW)
+VAR_GW_STR_PLUS = str(VAR_GW+1)
 VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
 VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
 URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
@@ -24,8 +26,8 @@ URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 # ================== STREAMLIT PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ FPL Optimiser")
-st.subheader("CURRENTLY ANALYSING DATA FROM GW"+(VAR_GW))
-st.caption("Will be back up and running before GW"+(VAR_GW+1))
+st.subheader("CURRENTLY ANALYSING DATA FROM GW"+VAR_GW_STR)
+st.caption("Will be back up and running before GW"+VAR_GW_STR_PLUS)
 
 # ================== MARKDOWN ================================
 st.markdown("""
