@@ -125,9 +125,6 @@ if st.button("🚀 Run Model - Test Data for now"):
     st.session_state.final_team = selected_team
     st.session_state.raw_output = output
 
-# ======= If model has results, show tabs =======
-if st.session_state.final_team is not None and st.session_state.raw_output is not None:
-
     # ======= Position color map =======
     def highlight_pos(val):
         color_map = {
