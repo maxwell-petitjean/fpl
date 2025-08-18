@@ -546,7 +546,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.metric("📈 Total Points", f"{st.session_state.final_team['predicted_points'].sum():.2f}")
         st.markdown("---")
 
-        ft = final_team.copy()
+        ft = st.session_state.final_team.copy()
 
         # ===== Captain Ranking (Top 3 by gw1) =====
         st.subheader("🧢 Captain Ranking (Next GW)")
@@ -569,13 +569,9 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 3 — Raw Output with Position Filter ---
     with tab3:
-        player_output = st.session_state.player_output.sort_values(by="predicted_points", ascending=False)
-
-        positions = player_output['pos'].unique().tolist()
-        pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
-        filtered_df = player_output[player_output['pos'].isin(pos_filter)]
-        st.dataframe(filtered_df, use_container_width=True, height=800)
-
+        numeric_cols_po = st.session_state.player_output.select_dtypes(include=[np.number]).columns
+        styled_po = st.session_state.player_output.style.background_gradient(subset=numeric_cols_po, cmap="YlGnBu").format(precision=2)
+        st.dataframe(styled_po, use_container_width=True, height=500)
 
     # --- Tab 4 — Fixture Difficulty ---
     with tab4:
@@ -584,9 +580,9 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.markdown("### 🔴 Attackers")
         numeric_cols_att = st.session_state.fdr_att.select_dtypes(include=[np.number]).columns
         styled_att = st.session_state.fdr_att.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
-        st.dataframe(styled_att, use_container_width=True, height=500)
+        st.dataframe(styled_att, use_container_width=True, height=700)
 
         st.markdown("### 🛡️ Defenders")
         numeric_cols_def = st.session_state.fdr_def.select_dtypes(include=[np.number]).columns
         styled_def = st.session_state.fdr_def.style.background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
-        st.dataframe(styled_def, use_container_width=True, height=500)
+        st.dataframe(styled_def, use_container_width=True, height=700)
