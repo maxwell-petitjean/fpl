@@ -569,9 +569,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 3 — Raw Output with Position Filter ---
     with tab3:
-        numeric_cols_po = st.session_state.player_output.select_dtypes(include=[np.number]).columns
-        styled_po = st.session_state.player_output.style.background_gradient(subset=numeric_cols_po, cmap="YlGnBu").format(precision=2)
-        st.dataframe(styled_po, use_container_width=True, height=500)
+        st.dataframe(st.session_state.player_output, use_container_width=True, height=500)
 
     # --- Tab 4 — Fixture Difficulty ---
     with tab4:
