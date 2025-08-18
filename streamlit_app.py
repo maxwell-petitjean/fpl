@@ -536,7 +536,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         styled_df = st.session_state.final_team.style.applymap(highlight_pos, subset=["pos"]) \
                                                     .background_gradient(subset=numeric_cols1, cmap="YlGnBu") \
                                                     .format(precision=2)
-        st.dataframe(styled_df, use_container_width=True, height=800)
+        st.dataframe(styled_df, use_container_width=True, height=600)
         csv = st.session_state.final_team.to_csv(index=False)
         st.download_button("⬇️ Download squad as CSV", csv, "squad.csv", "text/csv")
 
@@ -575,9 +575,31 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
         filtered_df = player_output[player_output['pos'].isin(pos_filter)]
 
-        numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
-        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu").format(precision=2)
-        st.dataframe(styled_raw, use_container_width=True, height=800)
+        # --- Robust styling for Research Players ---
+        df = filtered_df.copy()
+
+        # Make sure column names are strings (avoids rare KeyError cases)
+        df.columns = df.columns.map(str)
+
+        # Get numeric columns as a plain list
+        num_cols = df.select_dtypes(include='number').columns.tolist()
+
+        try:
+            styler = df.style
+
+            # Only apply gradient if we actually have numeric columns
+            if num_cols:
+                styler = styler.background_gradient(subset=num_cols, cmap="YlGnBu")
+
+            # Always format numeric columns to 2dp
+            styler = styler.format({c: "{:.2f}" for c in num_cols})
+
+            st.dataframe(styler, use_container_width=True, height=800)
+        except Exception:
+            # If Styler chokes for any reason, just show the plain table (rounded)
+            if num_cols:
+                df[num_cols] = df[num_cols].round(2)
+            st.dataframe(df, use_container_width=True, height=800)
 
     # --- Tab 4 — Fixture Difficulty ---
     with tab4:
