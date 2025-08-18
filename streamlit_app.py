@@ -597,8 +597,10 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             st.dataframe(styler, use_container_width=True, height=800)
         except Exception:
             # If Styler chokes for any reason, just show the plain table (rounded)
-            for c in num_cols:
-                df[c] = pd.to_numeric(df[c], errors="coerce").round(2)
+            df = df.apply(lambda s: pd.to_numeric(s, errors="ignore")).copy()
+            num_cols = df.select_dtypes(include="number").columns
+            df.loc[:, num_cols] = df.loc[:, num_cols].apply(lambda s: s.round(2))
+            
             st.dataframe(df, use_container_width=True, height=800)
 
 
