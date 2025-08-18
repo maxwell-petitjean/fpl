@@ -88,7 +88,7 @@ def get_inputs():
 
 # ================== INPUT PARAMETERS ==================
 with st.expander("⚙️ Input Parameters", expanded=True):
-    fpl_id_input, transfers_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
+    fpl_id_input, transfers_input, exclude_names_input, include_names_input, budget_input = get_inputs()
 
 # ============= HELPERS =============
 def load_csv(filename):
