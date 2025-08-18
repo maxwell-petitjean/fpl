@@ -542,32 +542,20 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 2 — Summary
     with tab2:
-        ft = player_output.copy()
-
-        # Ensure numeric types
-        for col in ["gw1", "predicted_points"]:
-            if col in ft.columns:
-                ft[col] = pd.to_numeric(ft[col], errors="coerce")
-
-        # Cards
-        c1, c2 = st.columns(2)
-        with c1:
-            if "cost" in ft.columns:
-                st.metric("💰 Total Cost", f"{ft['cost'].sum():.2f}")
-        with c2:
-            if "predicted_points" in ft.columns:
-                st.metric("📈 Total Points", f"{ft['predicted_points'].sum():.2f}")
-
+        st.metric("💰 Total Cost", f"{st.session_state.final_team['cost'].sum():.2f}")
+        st.metric("📈 Total Points", f"{st.session_state.final_team['predicted_points'].sum():.2f}")
         st.markdown("---")
 
+        ft = final_team.copy()
+
         # ===== Captain Ranking (Top 3 by gw1) =====
-        st.subheader("🧢 Captain Ranking (GW1)")
+        st.subheader("🧢 Captain Ranking (Next GW)")
         if "gw1" in ft.columns and "name" in ft.columns:
             top3 = ft.dropna(subset=["gw1"]).nlargest(3, "gw1")
             top3 = top3[["name", "team", "pos", "gw1"]].round(2)
-            st.table(top3.rename(columns={"gw1": "GW1 points"}))
+            st.table(top3.rename(columns={"gw1": "GW points"}))
         else:
-            st.info("GW1 data not available in current output.")
+            st.info("GW data not available in current output.")
 
         # ===== Underperformers (Bottom 5 by predicted_points) =====
         st.subheader("⬇️ Who to lose? - Lowest Predicted Points (5)")
