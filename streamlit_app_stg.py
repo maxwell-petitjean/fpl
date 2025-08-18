@@ -541,11 +541,11 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
     # --- Tab 2 — Summary
     with tab2:
         st.metric("💰 Total Cost", f"{st.session_state.final_team['cost'].sum():.2f}")
-        st.metric("📈 Total Points", f"{st.session_state.final_team['net_points'].sum():.2f}")
+        st.metric("📈 Total Points", f"{st.session_state.final_team['predicted_points'].sum():.2f}")
 
     # --- Tab 3 — Raw Output with Position Filter ---
     with tab3:
-        raw_output = st.session_state.raw_output.sort_values(by="net_points", ascending=False)
+        raw_output = st.session_state.raw_output.sort_values(by="predicted_points", ascending=False)
 
         positions = raw_output['pos'].unique().tolist()
         pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
