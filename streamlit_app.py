@@ -71,7 +71,7 @@ div.stButton > button:first-child:hover {
 # ================== INPUT FORM LOGIC ==================
 def get_inputs():
     fpl_id = st.text_input("FPL ID (enter here to pull through your team data?)")
-    transfers = st.number_input("How many transfers to make? Set as 1 or more",value=1, step=1)
+    transfers = st.number_input("How many transfers to make? Set as 1 or more",value=1)
     exclude_names = st.text_area(
         "Exclude Names (comma separated)",
         value="Rayan Aït-Nouri, Bryan Mbeumo"
@@ -99,7 +99,7 @@ def load_csv(filename):
         return pd.read_csv(url, encoding="latin1")
 
 # ============= MODEL FUNCTION =============
-def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, budget):
+def run_model(fpl_id, transfers, exclude_names, include_names, budget):
     # ---- Load API data ----
     json1 = requests.get(URL1).json()
     json2 = requests.get(URL2).json()
@@ -569,11 +569,11 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 3 — Raw Output with Position Filter ---
     with tab3:
-        raw_output = st.session_state.raw_output.sort_values(by="predicted_points", ascending=False)
+        player_output = st.session_state.player_output.sort_values(by="predicted_points", ascending=False)
 
-        positions = raw_output['pos'].unique().tolist()
+        positions = player_output['pos'].unique().tolist()
         pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
-        filtered_df = raw_output[raw_output['pos'].isin(pos_filter)]
+        filtered_df = player_output[player_output['pos'].isin(pos_filter)]
 
         numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
         styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu").format(precision=2)
