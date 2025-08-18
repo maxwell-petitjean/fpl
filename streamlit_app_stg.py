@@ -542,7 +542,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 2 — Summary
     with tab2:
-        ft = player_output.copy()
+        ft = final_team.copy()
 
         # Ensure numeric types
         for col in ["gw1", "predicted_points"]:
