@@ -37,7 +37,7 @@ URL39 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW9)+'/live/'
 
 # ================== STREAMLIT PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
-st.title("⚽ FPL Optimiser")
+st.title("⚽ Free FPL Optimiser")
 st.subheader("Optimise your Fantasy Premier League team")
 st.caption("Hit 'Run Model' to get started.")
 
@@ -478,7 +478,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
     selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6','starting_weeks']]
 
-    return selected_team, output
+    return selected_team, output, fixtures_att1, fixtures_def1
 
 # ===== SESSION STATE SETUP =====
 if "final_team" not in st.session_state:
