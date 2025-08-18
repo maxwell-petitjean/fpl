@@ -509,7 +509,11 @@ if st.button("🚀 Run Model"):
     st.success("✅ Model run complete!")
 
     # Round numeric values
-    for df in [final_team, raw_output]:
+    for df in [final_team]:
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        df[numeric_cols] = df[numeric_cols].round(2)
+    # Round numeric values
+    for df in [raw_output]:
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         df[numeric_cols] = df[numeric_cols].round(2)
 
@@ -536,9 +540,9 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 1 — Final Squad
     with tab1:
-        numeric_cols = st.session_state.final_team.select_dtypes(include=[np.number]).columns
+        numeric_cols1 = st.session_state.final_team.select_dtypes(include=[np.number]).columns
         styled_df = st.session_state.final_team.style.applymap(highlight_pos, subset=["pos"]) \
-                                                    .background_gradient(subset=numeric_cols, cmap="YlGnBu") \
+                                                    .background_gradient(subset=numeric_cols1, cmap="YlGnBu") \
                                                     .format(precision=2)
         st.dataframe(styled_df, use_container_width=True, height=800)
         csv = st.session_state.final_team.to_csv(index=False)
