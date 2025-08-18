@@ -13,13 +13,27 @@ import numpy as np
 import requests
 import pulp
 
-# ================== CONFIG ==================
+# ============= CONFIG =============
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
-VAR_GW = 1
+VAR_GW = 2
+VAR_GW0,VAR_GW1,VAR_GW2,VAR_GW3,VAR_GW4 = VAR_GW-1,VAR_GW-2,VAR_GW-3,VAR_GW-4,VAR_GW-5
+VAR_GW5,VAR_GW6,VAR_GW7,VAR_GW8,VAR_GW9 = VAR_GW-6,VAR_GW-7,VAR_GW-8,VAR_GW-9,VAR_GW-10
+VAR_GW_LY = 38-(10-VAR_GW)
 VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
 VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
 URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
 URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
+
+URL30 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW0)+'/live/'
+URL31 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW1)+'/live/'
+URL32 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW2)+'/live/'
+URL33 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW3)+'/live/'
+URL34 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW4)+'/live/'
+URL35 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW5)+'/live/'
+URL36 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW6)+'/live/'
+URL37 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW7)+'/live/'
+URL38 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW8)+'/live/'
+URL39 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW9)+'/live/'
 
 # ================== STREAMLIT PAGE CONFIG ==================
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
@@ -75,11 +89,13 @@ def get_inputs():
 with st.expander("⚙️ Input Parameters", expanded=True):
     fpl_id_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
 
-# ================== HELPERS ==================
-@st.cache_data
+# ============= HELPERS =============
 def load_csv(filename):
     url = GITHUB_BASE + filename
-    return pd.read_csv(url)
+    try:
+        return pd.read_csv(url, encoding="utf-8")
+    except UnicodeDecodeError:
+        return pd.read_csv(url, encoding="latin1")
 
 # ============= MODEL FUNCTION =============
 def run_model(fpl_id, exclude_names, exclude_teams, include_names, budget):
