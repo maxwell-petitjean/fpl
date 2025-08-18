@@ -71,6 +71,7 @@ div.stButton > button:first-child:hover {
 # ================== INPUT FORM LOGIC ==================
 def get_inputs():
     fpl_id = st.text_input("FPL ID (not live yet - only available after gw1 fixtures consolidated data)")
+    transfers = st.number_input("How many transfers to make? Set as 1 or more",value=1, step=1)
     exclude_names = st.text_area(
         "Exclude Names (comma separated)",
         value="Rayan Aït-Nouri, Bryan Mbeumo"
