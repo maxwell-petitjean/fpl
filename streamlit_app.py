@@ -576,7 +576,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         filtered_df = player_output[player_output['pos'].isin(pos_filter)]
 
         numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
-        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu").format(precision=2)
+        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu")
         st.dataframe(styled_raw, use_container_width=True, height=800)
 
 
