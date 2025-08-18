@@ -391,9 +391,9 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
 
     player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
 
-    output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
+    #output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
 
-    player_output = player_output.sort_values(by='predicted_points', ascending=False)
+    output = player_output.copy()
     output = output.sort_values(by='predicted_points', ascending=False)
 
     # ---- FPL ID Squad Fetch ----
@@ -478,7 +478,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
     selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6','starting_weeks']]
 
-    return selected_team, player_output, fixtures_att1, fixtures_def1
+    return selected_team, output, fixtures_att1, fixtures_def1
 
 # ===== SESSION STATE SETUP =====
 if "final_team" not in st.session_state:
