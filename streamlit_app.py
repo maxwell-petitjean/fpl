@@ -84,7 +84,7 @@ def get_inputs():
         "Include Names (comma separated)"
     ).split(",")
     budget = st.number_input("Budget", value=1000, step=1)
-    return fpl_id, transfers, exclude_names, exclude_teams, include_names, budget
+    return fpl_id, transfers, exclude_names, include_names, budget
 
 # ================== INPUT PARAMETERS ==================
 with st.expander("⚙️ Input Parameters", expanded=True):
@@ -501,7 +501,6 @@ if st.button("🚀 Run Model"):
             fpl_id_input if fpl_id_input else None,
             transfers_input if transfers_input else 1,
             exclude_names_clean,
-            exclude_teams_clean,
             include_names_clean,
             budget_input
         )
