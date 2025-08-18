@@ -391,9 +391,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
 
     player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
 
-    #output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
-
-    output = player_output.copy()
+    output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
     output = output.sort_values(by='predicted_points', ascending=False)
 
     # ---- FPL ID Squad Fetch ----
@@ -478,13 +476,15 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
     selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6','starting_weeks']]
 
-    return selected_team, output, fixtures_att1, fixtures_def1
+    return selected_team, output, player_output, fixtures_att1, fixtures_def1
 
 # ===== SESSION STATE SETUP =====
 if "final_team" not in st.session_state:
     st.session_state.final_team = None
 if "raw_output" not in st.session_state:
     st.session_state.raw_output = None
+if "player_output" not in st.session_state:
+    st.session_state.player_output = None
 if "fdr_att" not in st.session_state:
     st.session_state.fdr_att = None
 if "fdr_def" not in st.session_state:
@@ -497,7 +497,7 @@ if st.button("🚀 Run Model"):
     include_names_clean = [n.strip() for n in include_names_input if n.strip()]
 
     with st.spinner("Optimising your squad... please wait ⏳"):
-        final_team, raw_output, fdr_att, fdr_def = run_model(
+        final_team, raw_output, player_output, fdr_att, fdr_def = run_model(
             fpl_id_input if fpl_id_input else None,
             transfers_input if transfers_input else 1,
             exclude_names_clean,
@@ -511,6 +511,7 @@ if st.button("🚀 Run Model"):
     # Save to session state
     st.session_state.final_team = final_team
     st.session_state.raw_output = raw_output
+    st.session_state.player_output = player_output
     st.session_state.fdr_att = fdr_att
     st.session_state.fdr_def = fdr_def
 
@@ -541,7 +542,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 2 — Summary
     with tab2:
-        ft = final_team.copy()
+        ft = player_output.copy()
 
         # Ensure numeric types
         for col in ["gw1", "predicted_points"]:
