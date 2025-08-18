@@ -517,7 +517,7 @@ if st.button("🚀 Run Model"):
     st.session_state.final_team = final_team
     st.session_state.raw_output = raw_output
     st.session_state.fdr_att = fdr_att
-    st.session_state.fdr_def = fdr_adef
+    st.session_state.fdr_def = fdr_def
 
 # ======= If model has results, show tabs =======
 if st.session_state.final_team is not None and st.session_state.raw_output is not None:
