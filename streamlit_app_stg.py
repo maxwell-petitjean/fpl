@@ -363,8 +363,8 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     players9 = players9.fillna(0)
     players9['ep_fpl'] = pd.to_numeric(players9['ep_fpl'], errors='coerce')
     players9['mean_value'] = round( players9[['pred_pp90_form','pp90_ly','ep_fpl']].mean(axis=1) ,2)
+    players9['mean_value'] = np.where( players9['pp90_ly']==0, players9[['pred_pp90_form','ep_fpl']].mean(axis=1) , players9['mean_value'] )
     players9['base_points'] = round( (players9['mean_value']/90) * players9['xm'] ,2)
-    players9['base_points'] = np.where( players9['pp90_ly']==0, players9[['pred_pp90_form','ep_fpl']].mean(axis=1) , players9['base_points'] )
     players9['bp_copy'] = players9['base_points']
 
     for w in ['gw1','gw2','gw3','gw4','gw5','gw6']:
@@ -389,9 +389,9 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output['cs_p90'] = ( player_output['cs'] / ( player_output['mins'] / 90 ) ).round(2)
     player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
-    player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','base_points','mean_value','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
 
-    output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','base_points','gw1','gw2','gw3','gw4','gw5','gw6']]
+    output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
 
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
     output = output.sort_values(by='predicted_points', ascending=False)
