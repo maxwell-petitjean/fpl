@@ -379,7 +379,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     final_pos = positions[['pos','id']]
     final_pos.columns = ['pos_code','pos_id']
     players10 = players10.merge(final_pos,left_on='pos',right_on='pos_code',how='left')
-    player_output = players10[['name','team','pos','ownership','points','mins','xm','points_ly','pp90_ly','xg','xa','cs','dc','predicted_points','base_points','mean_value','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = players10[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xa','cs','dc','predicted_points','base_points','mean_value','pred_pp90_form','pp90_ly','ep_fpl']]
 
     player_output['xg'] = pd.to_numeric(player_output['xg'], errors='coerce')
     player_output['xa'] = pd.to_numeric(player_output['xa'], errors='coerce')
