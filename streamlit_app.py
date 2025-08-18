@@ -389,7 +389,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output['cs_p90'] = ( player_output['cs'] / ( player_output['mins'] / 90 ) ).round(2)
     player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
-    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
     player_output = player_output.fillna(0)
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
@@ -571,7 +571,12 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 3 — Raw Output with Position Filter ---
     with tab3:
-        st.dataframe(st.session_state.player_output, use_container_width=True, height=500)
+        st.subheader("🔬 Research Players Yourself")
+
+        st.markdown("Filter by position to find the key insights")
+        numeric_cols_po = st.session_state.player_output.select_dtypes(include=[np.number]).columns
+        styled_po = st.session_state.player_output.style.background_gradient(subset=numeric_cols_po, cmap="YlGnBu").format(precision=2)
+        st.dataframe(styled_po, use_container_width=True, height=1000)
 
     # --- Tab 4 — Fixture Difficulty ---
     with tab4:
@@ -580,9 +585,9 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.markdown("### 🔴 Attackers")
         numeric_cols_att = st.session_state.fdr_att.select_dtypes(include=[np.number]).columns
         styled_att = st.session_state.fdr_att.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
-        st.dataframe(styled_att, use_container_width=True, height=700)
+        st.dataframe(styled_att, use_container_width=True, height=750)
 
         st.markdown("### 🛡️ Defenders")
         numeric_cols_def = st.session_state.fdr_def.select_dtypes(include=[np.number]).columns
         styled_def = st.session_state.fdr_def.style.background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
-        st.dataframe(styled_def, use_container_width=True, height=700)
+        st.dataframe(styled_def, use_container_width=True, height=750)
