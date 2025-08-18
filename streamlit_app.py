@@ -84,11 +84,11 @@ def get_inputs():
         "Include Names (comma separated)"
     ).split(",")
     budget = st.number_input("Budget", value=1000, step=1)
-    return fpl_id, transfers, exclude_names, include_names, budget
+    return fpl_id, transfers, exclude_names, exclude_teams, include_names, budget
 
 # ================== INPUT PARAMETERS ==================
 with st.expander("⚙️ Input Parameters", expanded=True):
-    fpl_id_input, transfers_input, exclude_names_input, include_names_input, budget_input = get_inputs()
+    fpl_id_input, transfers_input, exclude_names_input, exclude_teams_input, include_names_input, budget_input = get_inputs()
 
 # ============= HELPERS =============
 def load_csv(filename):
@@ -99,7 +99,7 @@ def load_csv(filename):
         return pd.read_csv(url, encoding="latin1")
 
 # ============= MODEL FUNCTION =============
-def run_model(fpl_id, transfers, exclude_names, include_names, budget):
+def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, budget):
     # ---- Load API data ----
     json1 = requests.get(URL1).json()
     json2 = requests.get(URL2).json()
@@ -501,6 +501,7 @@ if st.button("🚀 Run Model"):
             fpl_id_input if fpl_id_input else None,
             transfers_input if transfers_input else 1,
             exclude_names_clean,
+            exclude_teams_clean,
             include_names_clean,
             budget_input
         )
