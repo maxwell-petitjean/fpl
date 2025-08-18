@@ -508,15 +508,6 @@ if st.button("🚀 Run Model"):
 
     st.success("✅ Model run complete!")
 
-    # Round numeric values
-    for df in [final_team]:
-        numeric_cols = df.select_dtypes(include=[np.number]).columns
-        df[numeric_cols] = df[numeric_cols].round(2)
-    # Round numeric values
-    for df in [raw_output]:
-        numeric_cols = df.select_dtypes(include=[np.number]).columns
-        df[numeric_cols] = df[numeric_cols].round(2)
-
     # Save to session state
     st.session_state.final_team = final_team
     st.session_state.raw_output = raw_output
