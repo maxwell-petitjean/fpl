@@ -485,6 +485,10 @@ if "final_team" not in st.session_state:
     st.session_state.final_team = None
 if "raw_output" not in st.session_state:
     st.session_state.raw_output = None
+if "fdr_att" not in st.session_state:
+    st.session_state.fdr_att = None
+if "fdr_def" not in st.session_state:
+    st.session_state.fdr_def = None
 
 # ================== RUN BUTTON ==================
 if st.button("🚀 Run Model"):
@@ -493,7 +497,7 @@ if st.button("🚀 Run Model"):
     include_names_clean = [n.strip() for n in include_names_input if n.strip()]
 
     with st.spinner("Optimising your squad... please wait ⏳"):
-        final_team, raw_output = run_model(
+        final_team, raw_output, fdr_att, fdr_def = run_model(
             fpl_id_input if fpl_id_input else None,
             transfers_input if transfers_input else 1,
             exclude_names_clean,
@@ -512,6 +516,8 @@ if st.button("🚀 Run Model"):
     # Save to session state
     st.session_state.final_team = final_team
     st.session_state.raw_output = raw_output
+    st.session_state.fdr_att = fdr_att
+    st.session_state.fdr_def = fdr_adef
 
 # ======= If model has results, show tabs =======
 if st.session_state.final_team is not None and st.session_state.raw_output is not None:
@@ -560,11 +566,11 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.subheader("⚔️ Fixture Difficulty Rating")
 
         st.markdown("### 🔴 Attackers")
-        numeric_cols_att = fixtures_att1.select_dtypes(include=[np.number]).columns
-        styled_att = fixtures_att1.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
+        numeric_cols_att = st.session_state.fdr_att.select_dtypes(include=[np.number]).columns
+        styled_att = st.session_state.fdr_att.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
         st.dataframe(styled_att, use_container_width=True, height=500)
 
         st.markdown("### 🛡️ Defenders")
-        numeric_cols_def = fixtures_def1.select_dtypes(include=[np.number]).columns
-        styled_def = fixtures_def1.style.background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
+        numeric_cols_def = st.session_state.fdr_def.select_dtypes(include=[np.number]).columns
+        styled_def = st.session_state.fdr_def.style.background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
         st.dataframe(styled_def, use_container_width=True, height=500)
