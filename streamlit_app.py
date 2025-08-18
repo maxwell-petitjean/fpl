@@ -390,6 +390,8 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
     player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = player_output.fillna(0)
+    player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
     output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
     output = output.sort_values(by='predicted_points', ascending=False)
@@ -497,7 +499,7 @@ if st.button("🚀 Run Model"):
     include_names_clean = [n.strip() for n in include_names_input if n.strip()]
 
     with st.spinner("Optimising your squad... please wait ⏳"):
-        final_team, raw_output, player_output, fdr_att, fdr_def = run_model(
+        final_team, output, player_output, fdr_att, fdr_def = run_model(
             fpl_id_input if fpl_id_input else None,
             transfers_input if transfers_input else 1,
             exclude_names_clean,
@@ -510,7 +512,7 @@ if st.button("🚀 Run Model"):
 
     # Save to session state
     st.session_state.final_team = final_team
-    st.session_state.raw_output = raw_output
+    st.session_state.raw_output = output
     st.session_state.player_output = player_output
     st.session_state.fdr_att = fdr_att
     st.session_state.fdr_def = fdr_def
