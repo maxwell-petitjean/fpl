@@ -389,7 +389,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output['cs_p90'] = ( player_output['cs'] / ( player_output['mins'] / 90 ) ).round(2)
     player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
-    player_output = player_output[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
     player_output = player_output.fillna(0)
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
