@@ -85,7 +85,8 @@ def get_inputs():
         "Include Names (comma separated)"
     ).split(",")
     budget = st.number_input("Budget", value=1000, step=1)
-    return fpl_id, transfers, exclude_names, exclude_teams, include_names, budget
+    picks_data=None
+    return fpl_id, transfers, exclude_names, exclude_teams, include_names, budget, picks_data
 
 # ================== INPUT PARAMETERS ==================
 with st.expander("⚙️ Input Parameters", expanded=True):
@@ -100,7 +101,7 @@ def load_csv(filename):
         return pd.read_csv(url, encoding="latin1")
 
 # ============= MODEL FUNCTION =============
-def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, budget, picks_data=None):
+def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, budget, picks_data):
 
     if fpl_id and picks_data is None:
         picks_url = f"https://fantasy.premierleague.com/api/entry/{fpl_id}/event/{VAR_GW0}/picks/"
