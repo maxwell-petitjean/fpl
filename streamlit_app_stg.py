@@ -399,7 +399,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output['cs_p90'] = ( player_output['cs'] / ( player_output['mins'] / 90 ) ).round(2)
     player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
-    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','cs_p90','dc','dc_p90','predicted_points','mean_value','xm','base_points','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','dc','dc_p90','xopp90_form','pred_pp90','base_points','predicted_points']]
     player_output = player_output.fillna(0)
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
@@ -542,7 +542,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         }
         return f"background-color: {color_map.get(val, 'white')}"
 
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 Full Squad","📊 Summary","📄 Research Players","📅 Fixture Difficulty"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📋 Full Squad","📊 Summary","📄 Research Players","📅 Fixture Difficulty","📖 Glossary"])
 
     # --- Tab 1 — Final Squad
     with tab1:
@@ -586,6 +586,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                 st.dataframe(added_df.round(2), use_container_width=True, height=220)
 
         # Existing styled final team table
+        st.session_state.final_team = st.session_state.final_team.reset_index(drop=True)
         numeric_cols1 = st.session_state.final_team.select_dtypes(include=[np.number]).columns
         styled_df = st.session_state.final_team.style.applymap(highlight_pos, subset=["pos"]) \
                                                     .background_gradient(subset=numeric_cols1, cmap="YlGnBu") \
@@ -647,6 +648,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         positions = research['pos'].unique().tolist()
         pos_filter = st.multiselect("Filter by position", options=positions, default=positions)
         filtered_df = research[research['pos'].isin(pos_filter)]
+        filtered_df = filtered_df.reset_index(drop=True)
 
         numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
         styled_raw = filtered_df.style.hide(axis="index").background_gradient(subset=numeric_cols_raw, cmap="RdYlGn").format(precision=2)
@@ -659,6 +661,8 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.markdown("### 🔴 Attackers")
         st.markdown("This shows you the average points per Attacker for opponents over the next 6 games.")
         fdr_att1 = st.session_state.fdr_att.sort_values(by="fdr", ascending=False)
+        fdr_att1 = fdr_att1.reset_index(drop=True)
+
         numeric_cols_att = fdr_att1.select_dtypes(include=[np.number]).columns
         styled_att = fdr_att1.style.hide(axis="index").background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
         st.dataframe(styled_att, use_container_width=True, height=750)
@@ -668,6 +672,28 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.markdown("### 🛡️ Defenders")
         st.markdown("This shows you the average points per Defender for opponents over the next 6 games.")
         fdr_def1 = st.session_state.fdr_def.sort_values(by="fdr", ascending=False)
+        fdr_def1 = fdr_def1.reset_index(drop=True)
+
         numeric_cols_def = fdr_def1.select_dtypes(include=[np.number]).columns
         styled_def = fdr_def1.style.hide(axis="index").background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
         st.dataframe(styled_def, use_container_width=True, height=750)
+
+    # --- Tab 5 — Glossary ---
+    with tab5:
+        st.subheader("📖 Metric Glossary")
+
+        glossary = {
+            "points": "Total FPL points scored this season (to date).",
+            "mins": "Minutes played this season.",
+            "points_ly": "Total FPL points last season (LY = last year).",
+            "xg": "Expected goals (quality of chances taken).",
+            "xg_p90": "Expected goals per 90 minutes.",
+            "xa": "Expected assists (quality of chances created).",
+            "xa_p90": "Expected assists per 90 minutes.",
+            "cs": "Clean sheets (team conceded 0 goals while player was on the pitch for ≥60’).",
+            "dc": "Defensive contributions (Clearances + Blocks + Recoveries + Interceptions + Tackles).",
+            "dcp90": "Defensive contributions per 90 minutes.",
+            "xopp90_form": "Expected Offensive Points Per 90 based on form (xg_p90 + xa_p90 multiplied by points they get for each action).",
+            "pred_pp90": "Our predicted number of points for the player.",
+            "base_points": "Predicted points adjusted by expected minutes.",
+            "predicted_points": "Predicted points over 6 weeks (base points adjusted by opponents form.)",
