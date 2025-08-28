@@ -71,15 +71,15 @@ div.stButton > button:first-child:hover {
 
 # ================== INPUT FORM LOGIC ==================
 def get_inputs():
-    fpl_id = st.text_input("FPL ID (enter your id to pull through your team data, or remove to see ideal wildcard team)",value=0)
-    transfers = st.number_input("How many transfers to make? Default value 0",value=0)
+    fpl_id = st.text_input("FPL ID (enter your id to pull through your team data, or remove to see ideal wildcard team)",value=2683207)
+    transfers = st.number_input("How many transfers to make? Default value 0, which will show team without transfers",value=0)
     exclude_names = st.text_area(
         "Exclude Names (comma separated)",
         value="El Hadj Diouf"
     ).split(",")
     exclude_teams = st.text_area(
         "Exclude Teams (comma separated)",
-        value="BRE"
+        value="LEE,SUN,BUR"
     ).split(",")
     include_names = st.text_area(
         "Include Names (comma separated, if you want to ensure a player stays in your team)"
@@ -614,7 +614,8 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
             numeric_cols_t3 = top3.select_dtypes(include=[np.number]).columns
             styled_t3 = top3.style.hide(axis="index").background_gradient(subset=numeric_cols_t3, cmap="Purples").format(precision=2)
-            st.table(styled_t3.rename(columns={"gw1": "Points prediction upcoming week","predicted_points": "Points prediction next 6 weeks"}))
+            styled_t3 = styled_t3.rename(columns={"gw1": "Points prediction upcoming week","predicted_points": "Points prediction next 6 weeks"})
+            st.table(styled_t3)
         else:
             st.info("GW data not available in current output.")
 
@@ -629,7 +630,8 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
             numeric_cols_b5 = bottom5.select_dtypes(include=[np.number]).columns
             styled_b5 = bottom5.style.hide(axis="index").background_gradient(subset=numeric_cols_b5, cmap="Oranges").format(precision=2)
-            st.table(styled_b5.rename(columns={"predicted_points": "Points prediction next 6 weeks"}))
+            styled_b5 = styled_b5.rename(columns={"predicted_points": "Points prediction next 6 weeks"})
+            st.table(styled_b5)
         else:
             st.info("Predicted points not available in current output.")
 
