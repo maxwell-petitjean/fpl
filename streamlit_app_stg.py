@@ -74,12 +74,10 @@ def get_inputs():
     fpl_id = st.text_input("FPL ID (enter your id to pull through your team data, or remove to see ideal wildcard team)",value="2683207")
     transfers = st.number_input("How many transfers to make? Default value 0, which will show team without transfers",value=0)
     exclude_names = st.text_area(
-        "Exclude Names (comma separated, see player names on research tab)",
-        value="Nathan Patterson"
+        "Exclude Names (comma separated, see player names on research tab)"
     ).split(",")
     exclude_teams = st.text_area(
-        "Exclude Teams (comma separated, see team codes on research tab)",
-        value="SUN"
+        "Exclude Teams (comma separated, see team codes on research tab)"
     ).split(",")
     include_names = st.text_area(
         "Include Names (comma separated, if you want to ensure a player stays in your team)"
