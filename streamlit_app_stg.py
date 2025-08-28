@@ -85,8 +85,7 @@ def get_inputs():
         "Include Names (comma separated)"
     ).split(",")
     budget = st.number_input("Budget", value=1000, step=1)
-    picks_data=None
-    return fpl_id, transfers, exclude_names, exclude_teams, include_names, budget, picks_data
+    return fpl_id, transfers, exclude_names, exclude_teams, include_names, budget
 
 # ================== INPUT PARAMETERS ==================
 with st.expander("⚙️ Input Parameters", expanded=True):
