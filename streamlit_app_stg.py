@@ -389,7 +389,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     final_pos = positions[['pos','id']]
     final_pos.columns = ['pos_code','pos_id']
     players10 = players10.merge(final_pos,left_on='pos',right_on='pos_code',how='left')
-    player_output = players10[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xa','cs','dc','predicted_points','base_points','mean_value','pred_pp90_form','pp90_ly','ep_fpl']]
+    player_output = players10[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xa','cs','dc','predicted_points','base_points','mean_value','xopp90_form','pred_pp90_form','pp90_ly','ep_fpl']]
 
     player_output['xg'] = pd.to_numeric(player_output['xg'], errors='coerce')
     player_output['xa'] = pd.to_numeric(player_output['xa'], errors='coerce')
@@ -399,7 +399,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output['cs_p90'] = ( player_output['cs'] / ( player_output['mins'] / 90 ) ).round(2)
     player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
-    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','dc','dc_p90','xopp90_form','pred_pp90','base_points','predicted_points']]
+    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','dc','dc_p90','xopp90_form','pred_pp90_form','base_points','predicted_points']]
     player_output = player_output.fillna(0)
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
