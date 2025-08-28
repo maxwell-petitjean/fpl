@@ -71,7 +71,7 @@ div.stButton > button:first-child:hover {
 
 # ================== INPUT FORM LOGIC ==================
 def get_inputs():
-    fpl_id = st.number_input("FPL ID (enter your id to pull through your team data, or remove to see ideal wildcard team)",value=2683207)
+    fpl_id = st.text_input("FPL ID (enter your id to pull through your team data, or remove to see ideal wildcard team)",value="2683207")
     transfers = st.number_input("How many transfers to make? Default value 0, which will show team without transfers",value=0)
     exclude_names = st.text_area(
         "Exclude Names (comma separated)",
@@ -510,7 +510,7 @@ if st.button("🚀 Run Model"):
             player_output,
             fdr_att,
             fdr_def,
-            current_names,  # <-- NEW
+            current_names
         ) = run_model(
             fpl_id_input if fpl_id_input else None,
             transfers_input if transfers_input else 0,
@@ -518,7 +518,7 @@ if st.button("🚀 Run Model"):
             exclude_teams_clean,
             include_names_clean,
             budget_input,
-            st.session_state.picks_data,  # <-- pass picks once
+            st.session_state.picks_data,
         )
 
     st.success("✅ Model run complete!")
@@ -622,7 +622,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.markdown("---")
 
         # ===== Underperformers (Bottom 5 by predicted_points) =====
-        st.subheader("⬇️ Who is getting the chop soon? - Lowest Predicted Points over next 6 weeks")
+        st.subheader("⬇️ Who is getting the chop soon? - Lowest predicted points over next 6 weeks")
         if "predicted_points" in ft.columns and "name" in ft.columns:
             bottom5 = ft.dropna(subset=["predicted_points"]).nsmallest(5, "predicted_points")
             bottom5 = bottom5[["name","team","pos","gw1","predicted_points"]]
