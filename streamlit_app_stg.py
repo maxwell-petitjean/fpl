@@ -192,6 +192,8 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     form2 = form1.merge(players4[['id', 'name']], left_on='id_form', right_on='id')
     form3 = form2[['name','dc_form','cs_form','xa_form','xg_form','points_form','mins_form']]
     form3.columns = ['name_form','dc_form','cs_form','xa_form','xg_form','points_form','mins_form']
+    form3['xa_form'] = form3['xa_form'].astype(float)
+    form3['xg_form'] = form3['xg_form'].astype(float)
 
     # ---- FORM -- LAST 10 (LAST YEAR)
     fixtures_prev1 = fixtures_prev0.drop(fixtures_prev0[fixtures_prev0['GW']< VAR_GW_LY].index)
@@ -202,9 +204,6 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
 
     # ---- FORM -- CONCATENATE LAST 10
     form4 = pd.concat([form3,fixtures_prev3])
-    form4['xa_form'] = form4['xa_form'].astype(float).astype('int64')
-    form4['xg_form'] = form4['xg_form'].astype(float).astype('int64')
-
     form40 = form4.merge(players4[['name','pos']], left_on='name_form', right_on='name')
 
     # ---- FORM -- CLEAN DATA
@@ -642,6 +641,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
     with tab3:
         st.subheader("🔬 Research Players Yourself")
         st.markdown("Filter by position to find the key insights")
+        st.markdown("See the glossary tab to understand what each metrics means...")
 
         research = st.session_state.player_output.sort_values(by="predicted_points", ascending=False)
 
@@ -681,6 +681,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
     # --- Tab 5 — Glossary ---
     with tab5:
         st.subheader("📖 Metric Glossary")
+        st.markdown("Here’s what each of the key metrics means:")
 
         glossary = {
             "points": "Total FPL points scored this season (to date).",
@@ -698,3 +699,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             "base_points": "Predicted points adjusted by expected minutes.",
             "predicted_points": "Predicted points over 6 weeks (base points adjusted by opponents form.)"
         }
+
+        # Display nicely
+        for metric, desc in glossary.items():
+            st.markdown(f"**{metric}** — {desc}")
