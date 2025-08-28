@@ -486,7 +486,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     selected_team = output[[player_vars[i].value() == 1 for i in output.index]].copy()
     selected_team['starting_weeks'] = selected_team.index.map(lambda i: ', '.join([w for w in weeks if week_vars[w][i].value() == 1]))
     selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
-    selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6','starting_weeks']]
+    selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6,'starting_weeks']]
 
     return selected_team, output, player_output, fixtures_att1, fixtures_def1, current_names
 
