@@ -648,12 +648,15 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.subheader("⚔️ Fixture Difficulty Rating")
 
         st.markdown("### 🔴 Attackers")
-        st.session_state.fdr_att = st.session_state.fdr_att.sort_values(by="fdr", ascending=False)
-        numeric_cols_att = st.session_state.fdr_att.select_dtypes(include=[np.number]).columns
-        styled_att = st.session_state.fdr_att.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
+        st.markdown("Test data here")
+        fdr_att1 = st.session_state.fdr_att.sort_values(by="fdr", ascending=False)
+        fdr_att2 = fdr_att1.reset_index()
+        numeric_cols_att = fdr_att2.select_dtypes(include=[np.number]).columns
+        styled_att = fdr_att2.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
         st.dataframe(styled_att, use_container_width=True, height=750)
 
         st.markdown("### 🛡️ Defenders")
+        st.markdown("Test data here")
         st.session_state.fdr_def = st.session_state.fdr_def.sort_values(by="fdr", ascending=False)
         numeric_cols_def = st.session_state.fdr_def.select_dtypes(include=[np.number]).columns
         styled_def = st.session_state.fdr_def.style.background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
