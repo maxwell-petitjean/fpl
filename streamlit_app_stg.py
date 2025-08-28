@@ -611,10 +611,14 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             top3 = top3[["name","team","pos","gw1","predicted_points"]]
             top3["gw1"] = top3["gw1"].round(2)
             top3["predicted_points"] = top3["predicted_points"].round(2)
-            st.table(top3.rename(columns={"gw1": "Points prediction upcoming week"}))
-            st.table(top3.rename(columns={"predicted_points": "Points prediction next 6 weeks"}))
+
+            numeric_cols_t3 = top3.select_dtypes(include=[np.number]).columns
+            styled_t3 = top3.style.hide(axis="index").background_gradient(subset=numeric_cols_t3, cmap="Purples").format(precision=2)
+            st.table(styled_t3.rename(columns={"gw1": "Points prediction upcoming week","predicted_points": "Points prediction next 6 weeks"}))
         else:
             st.info("GW data not available in current output.")
+
+        st.markdown("---")
 
         # ===== Underperformers (Bottom 5 by predicted_points) =====
         st.subheader("⬇️ Who is getting the chop soon? - Lowest Predicted Points over next 6 weeks")
@@ -622,7 +626,10 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             bottom5 = ft.dropna(subset=["predicted_points"]).nsmallest(5, "predicted_points")
             bottom5 = bottom5[["name", "team", "pos", "predicted_points"]]
             bottom5["predicted_points"] = bottom5["predicted_points"].round(2)
-            st.table(bottom5.rename(columns={"predicted_points": "Pred. points"}))
+
+            numeric_cols_b5 = bottom5.select_dtypes(include=[np.number]).columns
+            styled_b5 = bottom5.style.hide(axis="index").background_gradient(subset=numeric_cols_b5, cmap="Oranges").format(precision=2)
+            st.table(styled_b5.rename(columns={"predicted_points": "Points prediction next 6 weeks"}))
         else:
             st.info("Predicted points not available in current output.")
 
@@ -639,8 +646,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         filtered_df = research[research['pos'].isin(pos_filter)]
 
         numeric_cols_raw = filtered_df.select_dtypes(include=[np.number]).columns
-        styled_raw = filtered_df.style.background_gradient(subset=numeric_cols_raw, cmap="YlGnBu") \
-                                        .format(precision=2)
+        styled_raw = filtered_df.style.hide(axis="index").background_gradient(subset=numeric_cols_raw, cmap="RdYlGn").format(precision=2)
         st.dataframe(styled_raw, use_container_width=True, height=1000)
 
     # --- Tab 4 — Fixture Difficulty ---
@@ -648,16 +654,17 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.subheader("⚔️ Fixture Difficulty Rating")
 
         st.markdown("### 🔴 Attackers")
-        st.markdown("Test data here")
+        st.markdown("This shows you the average points per Attacker for opponents over the next 6 games.")
         fdr_att1 = st.session_state.fdr_att.sort_values(by="fdr", ascending=False)
-        fdr_att2 = fdr_att1.reset_index()
-        numeric_cols_att = fdr_att2.select_dtypes(include=[np.number]).columns
-        styled_att = fdr_att2.style.background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
+        numeric_cols_att = fdr_att1.select_dtypes(include=[np.number]).columns
+        styled_att = fdr_att1.style.hide(axis="index").background_gradient(subset=numeric_cols_att, cmap="Reds").format(precision=2)
         st.dataframe(styled_att, use_container_width=True, height=750)
 
+        st.markdown("---")
+
         st.markdown("### 🛡️ Defenders")
-        st.markdown("Test data here")
-        st.session_state.fdr_def = st.session_state.fdr_def.sort_values(by="fdr", ascending=False)
-        numeric_cols_def = st.session_state.fdr_def.select_dtypes(include=[np.number]).columns
-        styled_def = st.session_state.fdr_def.style.background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
+        st.markdown("This shows you the average points per Defender for opponents over the next 6 games.")
+        fdr_def1 = st.session_state.fdr_def.sort_values(by="fdr", ascending=False)
+        numeric_cols_def = fdr_def1.select_dtypes(include=[np.number]).columns
+        styled_def = fdr_def1.style.hide(axis="index").background_gradient(subset=numeric_cols_def, cmap="Blues").format(precision=2)
         st.dataframe(styled_def, use_container_width=True, height=750)
