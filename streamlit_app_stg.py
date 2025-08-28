@@ -696,4 +696,5 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             "xopp90_form": "Expected Offensive Points Per 90 based on form (xg_p90 + xa_p90 multiplied by points they get for each action).",
             "pred_pp90": "Our predicted number of points for the player.",
             "base_points": "Predicted points adjusted by expected minutes.",
-            "predicted_points": "Predicted points over 6 weeks (base points adjusted by opponents form.)",
+            "predicted_points": "Predicted points over 6 weeks (base points adjusted by opponents form.)"
+        }
