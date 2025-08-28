@@ -502,7 +502,7 @@ if st.button("🚀 Run Model"):
     with st.spinner("Optimising your squad... please wait ⏳"):
         final_team, output, player_output, fdr_att, fdr_def = run_model(
             fpl_id_input if fpl_id_input else None,
-            transfers_input if transfers_input else 1,
+            transfers_input if transfers_input else 0,
             exclude_names_clean,
             exclude_teams_clean,
             include_names_clean,
