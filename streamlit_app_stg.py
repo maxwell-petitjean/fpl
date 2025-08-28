@@ -79,7 +79,7 @@ def get_inputs():
     ).split(",")
     exclude_teams = st.text_area(
         "Exclude Teams (comma separated)",
-        value="LEE,SUN,BUR"
+        value="LEE, SUN, BUR"
     ).split(",")
     include_names = st.text_area(
         "Include Names (comma separated, if you want to ensure a player stays in your team)"
@@ -611,10 +611,10 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             top3 = top3[["name","team","pos","gw1","predicted_points"]]
             top3["gw1"] = top3["gw1"].round(2)
             top3["predicted_points"] = top3["predicted_points"].round(2)
+            top3.columns= ["name","team","pos","Points prediction upcoming week","Points prediction next 6 weeks"]
 
             numeric_cols_t3 = top3.select_dtypes(include=[np.number]).columns
             styled_t3 = top3.style.hide(axis="index").background_gradient(subset=numeric_cols_t3, cmap="Purples").format(precision=2)
-            styled_t3 = styled_t3.rename(columns={"gw1": "Points prediction upcoming week","predicted_points": "Points prediction next 6 weeks"})
             st.table(styled_t3)
         else:
             st.info("GW data not available in current output.")
@@ -625,12 +625,13 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.subheader("⬇️ Who is getting the chop soon? - Lowest Predicted Points over next 6 weeks")
         if "predicted_points" in ft.columns and "name" in ft.columns:
             bottom5 = ft.dropna(subset=["predicted_points"]).nsmallest(5, "predicted_points")
-            bottom5 = bottom5[["name", "team", "pos", "predicted_points"]]
+            bottom5 = bottom5[["name","team","pos","gw1","predicted_points"]]
+            bottom5["gw1"] = bottom5["gw1"].round(2)
             bottom5["predicted_points"] = bottom5["predicted_points"].round(2)
+            bottom5.columns= ["name","team","pos","Points prediction upcoming week","Points prediction next 6 weeks"]
 
             numeric_cols_b5 = bottom5.select_dtypes(include=[np.number]).columns
             styled_b5 = bottom5.style.hide(axis="index").background_gradient(subset=numeric_cols_b5, cmap="Oranges").format(precision=2)
-            styled_b5 = styled_b5.rename(columns={"predicted_points": "Points prediction next 6 weeks"})
             st.table(styled_b5)
         else:
             st.info("Predicted points not available in current output.")
