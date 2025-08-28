@@ -20,6 +20,14 @@ VAR_GW = 4
 VAR_GW0,VAR_GW1,VAR_GW2,VAR_GW3,VAR_GW4 = VAR_GW-1,VAR_GW-2,VAR_GW-3,VAR_GW-4,VAR_GW-5
 VAR_GW5,VAR_GW6,VAR_GW7,VAR_GW8,VAR_GW9 = VAR_GW-6,VAR_GW-7,VAR_GW-8,VAR_GW-9,VAR_GW-10
 VAR_GW_LY = 38-(10-VAR_GW)
+
+VGW_NAME_1 = 'gw'+str(VAR_GW)
+VGW_NAME_2 = 'gw'+str(VAR_GW+1)
+VGW_NAME_3 = 'gw'+str(VAR_GW+2)
+VGW_NAME_4 = 'gw'+str(VAR_GW+3)
+VGW_NAME_5 = 'gw'+str(VAR_GW+4)
+VGW_NAME_6 = 'gw'+str(VAR_GW+5)
+
 VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
 VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
 URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
@@ -403,6 +411,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
     output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
+    output.columns = ['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
     output = output.sort_values(by='predicted_points', ascending=False)
 
     # ---- FPL ID Squad Fetch (from picks_data) ----
@@ -418,7 +427,7 @@ def run_model(fpl_id, transfers, exclude_names, exclude_teams, include_names, bu
 
     # decision vars
     player_vars = pulp.LpVariable.dicts("Player", output.index, 0, 1, pulp.LpBinary)
-    weeks = ["gw1","gw2","gw3","gw4","gw5","gw6"]
+    weeks = [VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
     week_vars = {w: pulp.LpVariable.dicts(f"Week_{w}", output.index, 0, 1, pulp.LpBinary) for w in weeks}
 
     # ---- Squad constraints ----
@@ -591,6 +600,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                                                     .background_gradient(subset=numeric_cols1, cmap="YlGnBu") \
                                                     .format(precision=2)
         st.dataframe(styled_df, use_container_width=True, height=600)
+
         csv = st.session_state.final_team.to_csv(index=False)
         st.download_button("⬇️ Download squad as CSV", csv, "squad.csv", "text/csv")
 
