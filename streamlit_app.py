@@ -612,12 +612,12 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
         ft = st.session_state.final_team.copy()
 
-        # ===== Captain Ranking (Top 3 by gw1) =====
+        # ===== Captain Ranking (Top 3 by gw) =====
         st.subheader("🧢 Captain Ranking (Next GW)")
-        if "gw1" in ft.columns and "name" in ft.columns:
-            top3 = ft.dropna(subset=["gw1"]).nlargest(3, "gw1")
-            top3 = top3[["name","team","pos","gw1","predicted_points"]]
-            top3["gw1"] = top3["gw1"].round(2)
+        if VGW_NAME_1 in ft.columns and "name" in ft.columns:
+            top3 = ft.dropna(subset=[VGW_NAME_1]).nlargest(3, VGW_NAME_1)
+            top3 = top3[["name","team","pos",VGW_NAME_1,"predicted_points"]]
+            top3[VGW_NAME_1] = top3[VGW_NAME_1].round(2)
             top3["predicted_points"] = top3["predicted_points"].round(2)
             top3.columns= ["name","team","pos","Points prediction upcoming week","Points prediction next 6 weeks"]
             top3 = top3.reset_index(drop=True)
@@ -634,8 +634,8 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         st.subheader("⬇️ Who is getting the chop soon? - Lowest predicted points over next 6 weeks")
         if "predicted_points" in ft.columns and "name" in ft.columns:
             bottom5 = ft.dropna(subset=["predicted_points"]).nsmallest(5, "predicted_points")
-            bottom5 = bottom5[["name","team","pos","gw1","predicted_points"]]
-            bottom5["gw1"] = bottom5["gw1"].round(2)
+            bottom5 = bottom5[["name","team","pos",VGW_NAME_1,"predicted_points"]]
+            bottom5[VGW_NAME_1] = bottom5[VGW_NAME_1].round(2)
             bottom5["predicted_points"] = bottom5["predicted_points"].round(2)
             bottom5.columns= ["name","team","pos","Points prediction upcoming week","Points prediction next 6 weeks"]
             bottom5 = bottom5.reset_index(drop=True)
