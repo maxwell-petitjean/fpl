@@ -48,6 +48,7 @@ URL39 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW9)+'/live/'
 st.set_page_config(page_title="FPL Optimiser", layout="wide")
 st.title("⚽ Free FPL Optimiser")
 st.subheader("Optimise your Fantasy Premier League team")
+st.caption("Get Ready for Gameweek "+str(VAR_GW)+" (gw"+str(VAR_GW)+")!")
 st.caption("Hit 'Run Model' to get started.")
 
 # ================== MARKDOWN ================================
