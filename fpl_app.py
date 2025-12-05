@@ -470,21 +470,21 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         
                 weekly_df = pd.DataFrame(breakdown_rows)
 
-                # 🔥 Bench Boost Potential cue via colour:
-                # - Bench points column gets a gradient
-                # - Darker = better bench boost week
-                if not weekly_df.empty:
-                    styled_weekly = (
-                        weekly_df.style
-                        .background_gradient(subset=["Bench points"], cmap="Purples")
-                        .format(precision=2)
-                    )
-                    st.dataframe(
-                        styled_weekly,
-                        use_container_width=True,
-                    )
-                else:
-                    st.info("No weekly breakdown available.")
+        # 🔥 Bench Boost Potential cue via colour:
+        # - Bench points column gets a gradient
+        # - Darker = better bench boost week
+        if not weekly_df.empty:
+            styled_weekly = (
+                weekly_df.style
+                .background_gradient(subset=["Bench points"], cmap="Purples")
+                .format(precision=2)
+            )
+            st.dataframe(
+                styled_weekly,
+                use_container_width=True,
+            )
+        else:
+            st.info("No weekly breakdown available.")
 
 
 
