@@ -14,45 +14,37 @@ import pulp
 
 # ============= CONFIG =============
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
-
-# Upcoming GW
+# upcoming gw
 VAR_GW = 15
-VAR_GW0, VAR_GW1, VAR_GW2, VAR_GW3, VAR_GW4 = VAR_GW-1, VAR_GW-2, VAR_GW-3, VAR_GW-4, VAR_GW-5
-VAR_GW5, VAR_GW6, VAR_GW7, VAR_GW8, VAR_GW9 = VAR_GW-6, VAR_GW-7, VAR_GW-8, VAR_GW-9, VAR_GW-10
-VAR_GW_LY = 38 - 1  # last season cut-off
+VAR_GW0,VAR_GW1,VAR_GW2,VAR_GW3,VAR_GW4 = VAR_GW-1,VAR_GW-2,VAR_GW-3,VAR_GW-4,VAR_GW-5
+VAR_GW5,VAR_GW6,VAR_GW7,VAR_GW8,VAR_GW9 = VAR_GW-6,VAR_GW-7,VAR_GW-8,VAR_GW-9,VAR_GW-10
+VAR_GW_LY = 38-(1)
 
-VGW_NAME_1 = "gw" + str(VAR_GW)
-VGW_NAME_2 = "gw" + str(VAR_GW + 1)
-VGW_NAME_3 = "gw" + str(VAR_GW + 2)
-VGW_NAME_4 = "gw" + str(VAR_GW + 3)
-VGW_NAME_5 = "gw" + str(VAR_GW + 4)
-VGW_NAME_6 = "gw" + str(VAR_GW + 5)
+VGW_NAME_1 = 'gw'+str(VAR_GW)
+VGW_NAME_2 = 'gw'+str(VAR_GW+1)
+VGW_NAME_3 = 'gw'+str(VAR_GW+2)
+VGW_NAME_4 = 'gw'+str(VAR_GW+3)
+VGW_NAME_5 = 'gw'+str(VAR_GW+4)
+VGW_NAME_6 = 'gw'+str(VAR_GW+5)
 
-# Promoted / relegated mapping used in FDR
-VAR_REL1, VAR_REL2, VAR_REL3 = "IPS", "LEI", "SOU"
-VAR_PRO1, VAR_PRO2, VAR_PRO3 = "BUR", "LEE", "SUN"
+VAR_REL1, VAR_REL2, VAR_REL3 = 'IPS', 'LEI', 'SOU'
+VAR_PRO1, VAR_PRO2, VAR_PRO3 = 'BUR', 'LEE', 'SUN'
+URL1 = 'https://fantasy.premierleague.com/api/bootstrap-static/'
+URL2 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 
-# FPL API URLs
-URL1 = "https://fantasy.premierleague.com/api/bootstrap-static/"
-URL2 = "https://fantasy.premierleague.com/api/fixtures?future=1"
-
-URL30 = f"https://fantasy.premierleague.com/api/event/{VAR_GW0}/live/"
-URL31 = f"https://fantasy.premierleague.com/api/event/{VAR_GW1}/live/"
-URL32 = f"https://fantasy.premierleague.com/api/event/{VAR_GW2}/live/"
-URL33 = f"https://fantasy.premierleague.com/api/event/{VAR_GW3}/live/"
-URL34 = f"https://fantasy.premierleague.com/api/event/{VAR_GW4}/live/"
-URL35 = f"https://fantasy.premierleague.com/api/event/{VAR_GW5}/live/"
-URL36 = f"https://fantasy.premierleague.com/api/event/{VAR_GW6}/live/"
-URL37 = f"https://fantasy.premierleague.com/api/event/{VAR_GW7}/live/"
-URL38 = f"https://fantasy.premierleague.com/api/event/{VAR_GW8}/live/"
-URL39 = f"https://fantasy.premierleague.com/api/event/{VAR_GW9}/live/"
+URL30 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW0)+'/live/'
+URL31 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW1)+'/live/'
+URL32 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW2)+'/live/'
+URL33 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW3)+'/live/'
+URL34 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW4)+'/live/'
+URL35 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW5)+'/live/'
+URL36 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW6)+'/live/'
+URL37 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW7)+'/live/'
+URL38 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW8)+'/live/'
+URL39 = 'https://fantasy.premierleague.com/api/event/'+str(VAR_GW9)+'/live/'
 
 
-# ============= HELPERS =============
-def _load_csv_from_github(filename: str) -> pd.DataFrame:
-    """
-    Load a CSV from your GitHub 'fpl' repo, trying UTF-8 then latin1.
-    """
+def load_csv(filename):
     url = GITHUB_BASE + filename
     try:
         return pd.read_csv(url, encoding="utf-8")
@@ -60,7 +52,6 @@ def _load_csv_from_github(filename: str) -> pd.DataFrame:
         return pd.read_csv(url, encoding="latin1")
 
 
-# ============= CORE MODEL FUNCTION =============
 def run_model(
     fpl_id,
     transfers,
@@ -69,868 +60,379 @@ def run_model(
     include_names,
     budget,
     picks_data,
-    optimisation_mode: str = "next_6_gw",  # "next_6_gw" or "free_hit" (Free Hit)
+    optimisation_mode="next_6_gw",   # "next_6_gw" or "gw1_only" (Free Hit)
 ):
-    """
-    Core FPL model and optimiser.
 
-    Parameters
-    ----------
-    fpl_id : str or None
-        Your FPL entry ID (used only in normal mode to apply transfer constraints).
-    transfers : int
-        Number of free transfers you are willing to use (normal mode only).
-    exclude_names : list[str]
-        Player names to hard-exclude.
-    exclude_teams : list[str]
-        Team short codes to hard-exclude (e.g. 'MCI', 'LIV').
-    include_names : list[str]
-        Player names to hard-include (locks).
-    budget : int or float
-        Total budget in tenths of a million (e.g. 1000 = £100.0m).
-    picks_data : list[dict]
-        Raw picks array from /entry/{id}/event/{gw}/picks.
-    optimisation_mode : str
-        - "next_6_gw" -> maximise sum of VGW_NAME_1..6
-        - "free_hit"  -> maximise VGW_NAME_1 (Free Hit style)
-
-    Returns
-    -------
-    selected_team : DataFrame
-        Final optimised squad (15 players) with GW columns and starting_weeks.
-    output : DataFrame
-        Full candidate universe with projected multi-GW points.
-    player_output : DataFrame
-        Player-level diagnostic table.
-    fixtures_att1 : DataFrame
-        Team-level attacking FDR table.
-    fixtures_def1 : DataFrame
-        Team-level defensive FDR table.
-    current_names : list[str]
-        Names of players currently in your squad (normal mode only; [] in FH).
-    """
-
-    # --------------------------------------------------------------------------------------
-    # 1) Load core API & historical data
-    # --------------------------------------------------------------------------------------
+    # ---- Load API data ----
     json1 = requests.get(URL1).json()
     json2 = requests.get(URL2).json()
 
-    # Last 10 GWs of this season
-    gw_jsons = [
-        requests.get(URL30).json(),
-        requests.get(URL31).json(),
-        requests.get(URL32).json(),
-        requests.get(URL33).json(),
-        requests.get(URL34).json(),
-        requests.get(URL35).json(),
-        requests.get(URL36).json(),
-        requests.get(URL37).json(),
-        requests.get(URL38).json(),
-        requests.get(URL39).json(),
-    ]
-    gw_df = pd.concat([pd.DataFrame(j) for j in gw_jsons], ignore_index=True)
+    # turn to json
+    json30 = requests.get(URL30).json()
+    json31 = requests.get(URL31).json()
+    json32 = requests.get(URL32).json()
+    json33 = requests.get(URL33).json()
+    json34 = requests.get(URL34).json()
+    json35 = requests.get(URL35).json()
+    json36 = requests.get(URL36).json()
+    json37 = requests.get(URL37).json()
+    json38 = requests.get(URL38).json()
+    json39 = requests.get(URL39).json()
 
-    # Historical CSVs from GitHub
-    players_prev0 = _load_csv_from_github("players_24.csv")
-    fixtures_prev0 = _load_csv_from_github("gws_24.csv")
-    teams3 = _load_csv_from_github("teams_24.csv")
-    xm_manual = _load_csv_from_github("xm_manual.csv")
+    # turn to df
+    gw_df0 = pd.DataFrame(json30)
+    gw_df1 = pd.DataFrame(json31)
+    gw_df2 = pd.DataFrame(json32)
+    gw_df3 = pd.DataFrame(json33)
+    gw_df4 = pd.DataFrame(json34)
+    gw_df5 = pd.DataFrame(json35)
+    gw_df6 = pd.DataFrame(json36)
+    gw_df7 = pd.DataFrame(json37)
+    gw_df8 = pd.DataFrame(json38)
+    gw_df9 = pd.DataFrame(json39)
 
-    # --------------------------------------------------------------------------------------
-    # 2) Team & position metadata
-    # --------------------------------------------------------------------------------------
-    teams = pd.DataFrame(json1["teams"])[
-        [
-            "id",
-            "name",
-            "short_name",
-            "strength_attack_home",
-            "strength_defence_home",
-            "strength_attack_away",
-            "strength_defence_away",
-        ]
-    ]
-    teams.columns = [
-        "team_id",
-        "team_name",
-        "team_code",
-        "str_o_h",
-        "str_d_h",
-        "str_o_a",
-        "str_d_a",
-    ]
+    gw_df = pd.concat([gw_df0,gw_df1,gw_df2,gw_df3,gw_df4,gw_df5,gw_df6,gw_df7,gw_df8,gw_df9])
 
-    positions = pd.DataFrame(json1["element_types"])[["id", "singular_name_short"]]
-    positions.columns = ["id", "pos"]
+    # historical csvs
+    players_prev0 = load_csv("players_24.csv")
+    fixtures_prev0 = load_csv("gws_24.csv")
+    teams3 = load_csv("teams_24.csv")
+    xm_manual = load_csv("xm_manual.csv")
 
-    # --------------------------------------------------------------------------------------
-    # 3) Previous-season points -> pp90_ly
-    # --------------------------------------------------------------------------------------
-    players_prev1 = players_prev0[
-        ["first_name", "second_name", "element_type", "total_points", "minutes"]
-    ]
-    players_prev1["name"] = players_prev1["first_name"] + " " + players_prev1["second_name"]
-    players_prev2 = players_prev1[["name", "minutes", "total_points"]]
+    # ------------------------------------------------------------------------------------------
+    # ---- TEAMS data ----
+    teams = pd.DataFrame(json1['teams'])[['id','name','short_name','strength_attack_home','strength_defence_home','strength_attack_away','strength_defence_away']]
+    teams.columns = ['team_id','team_name','team_code','str_o_h','str_d_h','str_o_a','str_d_a']
+
+    # ---- POSITIONS data ----
+    positions = pd.DataFrame(json1['element_types'])[['id','singular_name_short']]
+    positions.columns = ['id','pos']
+
+    # ------------------------------------------------------------------------------------------
+    # ---- Players - Previous Seasons ----
+    players_prev1 = players_prev0[['first_name','second_name','element_type','total_points','minutes']]
+    players_prev1['name'] = players_prev1['first_name']+' '+players_prev1['second_name']
+    players_prev2 = players_prev1[['name','minutes','total_points']]
     players_prev3 = players_prev2.copy()
-    players_prev3.columns = ["name", "minutes", "points"]
-    players_prev3["pp90"] = players_prev3["points"] / (players_prev3["minutes"] / 90)
-    players_prev3["pp90"] = players_prev3["pp90"].fillna(0).clip(upper=10)
-    players_prev7 = players_prev3.sort_values("points", ascending=False)
-    players_prev8 = players_prev7.copy()
-    players_prev8.columns = ["name_ly", "mins_ly", "points_ly", "pp90_ly"]
+    players_prev3.columns = ['name','minutes','points']
+    players_prev5 = players_prev3.copy()
+    players_prev5['pp90'] = players_prev5['points'] / (players_prev5['minutes']/90)
+    players_prev6 = players_prev5.fillna(0)
+    players_prev6['pp90'] = round(players_prev6['pp90'],2).clip(upper=10)
+    players_prev7 = players_prev6.sort_values('points',ascending=False)
 
-    # --------------------------------------------------------------------------------------
-    # 4) Current-season form (players table)
-    # --------------------------------------------------------------------------------------
-    players = pd.DataFrame(json1["elements"])
-    players1 = players[
-        [
-            "id",
-            "first_name",
-            "second_name",
-            "team",
-            "element_type",
-            "now_cost",
-            "selected_by_percent",
-            "clearances_blocks_interceptions",
-            "recoveries",
-            "tackles",
-            "clean_sheets",
-            "expected_assists",
-            "expected_goals",
-            "total_points",
-            "minutes",
-        ]
-    ]
-
-    players2 = (
-        players1.merge(teams[["team_id", "team_code"]], left_on="team", right_on="team_id")
-        .merge(positions[["id", "pos"]], left_on="element_type", right_on="id")
-    )
-
+    # ------------------------------------------------------------------------------------------
+    # ---- FORM -- THIS SEASON
+    players = pd.DataFrame(json1['elements'])
+    players1 = players[['id','first_name','second_name','team','element_type','now_cost','selected_by_percent','clearances_blocks_interceptions','recoveries','tackles','clean_sheets','expected_assists','expected_goals','total_points','minutes']]
+    players2 = players1.merge(teams[['team_id', 'team_code']], left_on='team', right_on='team_id')\
+                       .merge(positions[['id', 'pos']], left_on='element_type', right_on='id')
     players3 = players2.copy()
-    players3["name"] = players3["first_name"] + " " + players3["second_name"]
-    players3["cbrit"] = (
-        players3["clearances_blocks_interceptions"]
-        + players3["recoveries"]
-        + players3["tackles"]
-    )
+    players3['name'] = players3['first_name']+' '+players3['second_name']
+    players3['cbrit'] = players3['clearances_blocks_interceptions']+players3['recoveries']+players3['tackles']
+    players4 = players3[['id_x','name','team_code','pos','now_cost','selected_by_percent','cbrit','clean_sheets','expected_assists','expected_goals','total_points','minutes']]
+    players4.columns = ['id','name','team','pos','cost','ownership','dc','cs','xa','xg','points','mins']
 
-    players4 = players3[
-        [
-            "id_x",
-            "name",
-            "team_code",
-            "pos",
-            "now_cost",
-            "selected_by_percent",
-            "cbrit",
-            "clean_sheets",
-            "expected_assists",
-            "expected_goals",
-            "total_points",
-            "minutes",
-        ]
-    ]
-    players4.columns = [
-        "id",
-        "name",
-        "team",
-        "pos",
-        "cost",
-        "ownership",
-        "dc",
-        "cs",
-        "xa",
-        "xg",
-        "points",
-        "mins",
-    ]
+    # ------------------------------------------------------------------------------------------
+    # ---- FORM -- LAST 10 (THIS YEAR)
+    form0 = pd.json_normalize(gw_df['elements'])
+    form1 = form0[['id','stats.defensive_contribution','stats.clean_sheets','stats.expected_assists','stats.expected_goals','stats.total_points','stats.minutes']]
+    form1.columns = ['id_form','dc_form','cs_form','xa_form','xg_form','points_form','mins_form']
+    form2 = form1.merge(players4[['id', 'name']], left_on='id_form', right_on='id')
+    form3 = form2[['name','dc_form','cs_form','xa_form','xg_form','points_form','mins_form']]
+    form3.columns = ['name_form','dc_form','cs_form','xa_form','xg_form','points_form','mins_form']
+    form3['xa_form'] = form3['xa_form'].astype(float)
+    form3['xg_form'] = form3['xg_form'].astype(float)
 
-    # --------------------------------------------------------------------------------------
-    # 5) Form – last 10 GWs this season
-    # --------------------------------------------------------------------------------------
-    form0 = pd.json_normalize(gw_df["elements"])
-    form1 = form0[
-        [
-            "id",
-            "stats.defensive_contribution",
-            "stats.clean_sheets",
-            "stats.expected_assists",
-            "stats.expected_goals",
-            "stats.total_points",
-            "stats.minutes",
-        ]
-    ]
-    form1.columns = [
-        "id_form",
-        "dc_form",
-        "cs_form",
-        "xa_form",
-        "xg_form",
-        "points_form",
-        "mins_form",
-    ]
-    form2 = form1.merge(players4[["id", "name"]], left_on="id_form", right_on="id")
-    form3 = form2[["name", "dc_form", "cs_form", "xa_form", "xg_form", "points_form", "mins_form"]]
-    form3.columns = [
-        "name_form",
-        "dc_form",
-        "cs_form",
-        "xa_form",
-        "xg_form",
-        "points_form",
-        "mins_form",
-    ]
-    form3["xa_form"] = form3["xa_form"].astype(float)
-    form3["xg_form"] = form3["xg_form"].astype(float)
+    # ---- FORM -- LAST 10 (LAST YEAR)
+    fixtures_prev1 = fixtures_prev0.drop(fixtures_prev0[fixtures_prev0['GW']< VAR_GW_LY].index)
+    fixtures_prev2 = fixtures_prev1[fixtures_prev1['position'] != 'AM']
+    fixtures_prev3 = fixtures_prev2[['name','cbrit','clean_sheets','expected_assists','expected_goals','total_points','minutes']]
+    fixtures_prev3.columns = ['name_form','dc_form','cs_form','xa_form','xg_form','points_form','mins_form']
+    fixtures_prev3['dc_form'] = (fixtures_prev3['mins_form'] / 90 ) * 5
 
-    # --------------------------------------------------------------------------------------
-    # 6) Form – last 10 GWs last season
-    # --------------------------------------------------------------------------------------
-    fixtures_prev1 = fixtures_prev0.drop(
-        fixtures_prev0[fixtures_prev0["GW"] < VAR_GW_LY].index
-    )
-    fixtures_prev2 = fixtures_prev1[fixtures_prev1["position"] != "AM"]
-    fixtures_prev3 = fixtures_prev2[
-        [
-            "name",
-            "cbrit",
-            "clean_sheets",
-            "expected_assists",
-            "expected_goals",
-            "total_points",
-            "minutes",
-        ]
-    ]
-    fixtures_prev3.columns = [
-        "name_form",
-        "dc_form",
-        "cs_form",
-        "xa_form",
-        "xg_form",
-        "points_form",
-        "mins_form",
-    ]
-    fixtures_prev3["dc_form"] = (fixtures_prev3["mins_form"] / 90) * 5
+    # ---- FORM -- CONCATENATE LAST 10
+    form4 = pd.concat([form3,fixtures_prev3])
+    form40 = form4.merge(players4[['name','pos']], left_on='name_form', right_on='name')
 
-    # Concatenate
-    form4 = pd.concat([form3, fixtures_prev3], ignore_index=True)
-    form40 = form4.merge(players4[["name", "pos"]], left_on="name_form", right_on="name")
-
-    form5 = pd.pivot_table(
-        form40,
-        values=["dc_form", "cs_form", "xa_form", "xg_form", "points_form", "mins_form"],
-        index=["name_form", "pos"],
-        aggfunc=np.sum,
-        fill_value=0,
-    )
+    # ---- FORM -- CLEAN DATA
+    form5 = pd.pivot_table(form40, values=['dc_form','cs_form','xa_form','xg_form','points_form','mins_form'], index=['name_form','pos'], aggfunc=[np.sum], fill_value=0)
     form6 = form5.reset_index()
     form6.columns = form6.columns.droplevel(0)
-    form6.columns = [
-        "name_form",
-        "pos_form",
-        "cs_form",
-        "dc_form",
-        "mins_form",
-        "points_form",
-        "xa_form",
-        "xg_form",
-    ]
+    form6.columns = ['name_form','pos_form','cs_form','dc_form','mins_form','points_form','xa_form','xg_form']
 
     form7 = form6.copy()
-    form7["xm_form"] = (form7["mins_form"] / 10).round(2)
-
+    form7['xm_form'] = round(form7['mins_form']/10,2)
     form8 = form7.copy()
-    form8["pp90_form"] = (form8["points_form"] / (form8["mins_form"] / 90)).round(2)
-
+    form8['pp90_form'] = round(form8['points_form'] / (form8['mins_form']/90),2)
     form9 = form8.copy()
-    form9["csp_form"] = (form9["cs_form"] * 4).round(2)
-    form9["cspp90_form"] = (form9["csp_form"] / (form9["mins_form"] / 90)).round(2)
-
+    form9['csp_form'] = round((form9['cs_form']*4),2)
+    form9['cspp90_form'] = round(form9['csp_form'] / (form9['mins_form']/90),2)
     form10 = form9.copy()
-    form10["xap_form"] = form10["xa_form"] * 3
-    form10["xgp_form"] = np.select(
-        [
-            form10["pos_form"] == "FWD",
-            form10["pos_form"] == "MID",
-            form10["pos_form"].isin(["DEF", "GKP"]),
-        ],
-        [
-            form10["xg_form"] * 4,
-            form10["xg_form"] * 5,
-            form10["xg_form"] * 6,
-        ],
-        default=0,
-    )
-    form10["xop_form"] = form10["xap_form"] + form10["xgp_form"]
-
+    form10['xap_form'] = form10['xa_form']*3
+    form10['xgp_form'] = np.where((form10['pos_form'] == 'FWD'), form10['xg_form'] * 4,
+                            np.where((form10['pos_form'] == 'MID'), form10['xg_form'] * 5,
+                            np.where((form10['pos_form'] == 'DEF') | (form10['pos_form'] == 'GKP'), form10['xg_form'] * 6,0 )))
+    form10['xop_form'] = form10['xap_form']+form10['xgp_form']
     form11 = form10.copy()
-    form11["xopp90_form"] = (form11["xop_form"] / (form11["mins_form"] / 90)).round(2)
-
+    form11['xopp90_form'] = round((form11['xop_form']) / (form11['mins_form']/90),2)
     form12 = form11.copy()
-    form12["dcp_form"] = np.select(
-        [
-            form12["pos_form"] == "MID",
-            form12["pos_form"] == "DEF",
-        ],
-        [
-            form12["dc_form"] / 6,
-            form12["dc_form"] / 5,
-        ],
-        default=0,
-    )
-    form12["dcp_form"] = form12["dcp_form"].round(2)
-    form12["dcpp90_form"] = (form12["dcp_form"] / (form12["mins_form"] / 90)).round(2).clip(
-        upper=2
-    )
-    form12["pred_pp90_form"] = (
-        form12["xopp90_form"] + form12["cspp90_form"] + form12["dcpp90_form"] + 2
-    )
+    form12['dcp_form'] = np.where((form12['pos_form'] == 'MID'), form12['dc_form'] / 6,
+                            np.where((form12['pos_form'] == 'DEF'), form12['dc_form'] / 5,0 ))
+    form12['dcp_form'] = round(form12['dcp_form'],2)
+    form12['dcpp90_form'] = round((form12['dcp_form']) / (form12['mins_form']/90),2).clip(upper=2)
+    form12['pred_pp90_form'] = form12['xopp90_form']+form12['cspp90_form']+form12['dcpp90_form']+2
     form12 = form12.fillna(0)
 
+    # ------------------------------------------------------------------------------------------
+    # ---- Merge player stats ----
+    players_prev8 = players_prev7.copy()
+    players_prev8.columns = ['name_ly','mins_ly','points_ly','pp90_ly']
     form13 = form12.copy()
+    players5 = players4.merge(players_prev8, how="left", left_on='name', right_on='name_ly')\
+                       .merge(form13,    how="left", left_on='name', right_on='name_form')
 
-    # --------------------------------------------------------------------------------------
-    # 7) Merge player table with historical & form data
-    # --------------------------------------------------------------------------------------
-    players5 = (
-        players4.merge(players_prev8, how="left", left_on="name", right_on="name_ly")
-        .merge(form13, how="left", left_on="name", right_on="name_form")
-    )
+    # ------------------------------------------------------------------------------------------
+    # ---- Build fixture difficulty ----
+    team_gw_prev1 = fixtures_prev1[['GW','position','team','opponent_team','was_home','total_points','minutes']]
+    team_gw_prev1['played60'] = np.where((team_gw_prev1['minutes'] > 60),1,0)
+    team_gw_prev2 = team_gw_prev1.drop(team_gw_prev1[team_gw_prev1['played60'] == 0].index)
+    team_gw_prev2['pos'] = np.where((team_gw_prev2['position'] == 'MID') | (team_gw_prev2['position'] == 'FWD'),'ATT', team_gw_prev2['position'])
+    team_gw_prev3 = pd.pivot_table(team_gw_prev2, values=['total_points','played60'], index=['opponent_team','was_home','pos'], aggfunc=[np.sum], fill_value=0)
+    team_gw_prev3 = team_gw_prev3.reset_index()
+    team_gw_prev3.columns = team_gw_prev3.columns.droplevel(0)
+    team_gw_prev3.columns = ['team','home','pos','players','points']
+    team_gw_prev4 = team_gw_prev3.copy()
+    team_gw_prev4['ppg'] = team_gw_prev4['points'] / team_gw_prev4['players']
+    team_gw_prev5 = team_gw_prev4.copy()
+    team_gw_prev5['ppgh'] = np.where((team_gw_prev5['home'] == True),team_gw_prev5['ppg'],0)
+    team_gw_prev5['ppga'] = np.where((team_gw_prev5['home'] == False),team_gw_prev5['ppg'],0)
+    team_gw_prev6 = pd.pivot_table(team_gw_prev5, values=['ppgh','ppga'], index=['team','pos'], aggfunc=[np.sum], fill_value=0).reset_index()
+    team_gw_prev6.columns = team_gw_prev6.columns.droplevel(0)
+    team_gw_prev6.columns = ['team','pos','ppgh','ppga']
+    team_gw_prev7 = team_gw_prev6.merge(teams3[['id', 'short_name']], left_on='team', right_on='id')
+    team_gw_prev8 = team_gw_prev7[['short_name','pos','ppgh','ppga']]
+    team_gw_prev8.columns = ['team_code','pos','ppgh','ppga']
+    team_gw_prev8['team_new'] = np.where(team_gw_prev8['team_code'] == VAR_REL1, VAR_PRO1,
+                                  np.where(team_gw_prev8['team_code'] == VAR_REL2, VAR_PRO2,
+                                  np.where(team_gw_prev8['team_code'] == VAR_REL3, VAR_PRO3, team_gw_prev8['team_code'])))
+    team_gw_prev9 = team_gw_prev8.merge(teams[['team_code','team_id']], left_on='team_new', right_on='team_code')
 
-    # --------------------------------------------------------------------------------------
-    # 8) Build FDR from last season fixtures
-    # --------------------------------------------------------------------------------------
-    team_gw_prev1 = fixtures_prev1[
-        ["GW", "position", "team", "opponent_team", "was_home", "total_points", "minutes"]
-    ]
-    team_gw_prev1["played60"] = np.where(team_gw_prev1["minutes"] > 60, 1, 0)
-    team_gw_prev2 = team_gw_prev1[team_gw_prev1["played60"] == 1].copy()
-    team_gw_prev2["pos"] = np.where(
-        team_gw_prev2["position"].isin(["MID", "FWD"]),
-        "ATT",
-        team_gw_prev2["position"],
-    )
+    # ------------------------------------------------------------------------------------------
+    # ---- Upcoming fixtures ----
+    fixtures = pd.DataFrame(json2)[['event','team_h','team_a']]
+    fixtures2 = fixtures.drop(fixtures[fixtures['event'] > (VAR_GW + 5)].index)
+    fixtures2 = fixtures2.drop(fixtures2[fixtures2['event'] < VAR_GW].index)
+    fixtures_h1 = fixtures2.pivot(index='team_h', columns='event', values='team_a').reset_index().fillna(0).astype(int)
+    fixtures_a1 = fixtures2.pivot(index='team_a', columns='event', values='team_h').reset_index().fillna(0).astype(int)
+    fixtures_h1.columns = ['team_h','a1','a2','a3','a4','a5','a6']
+    fixtures_a1.columns = ['team_a','h1','h2','h3','h4','h5','h6']
 
-    team_gw_prev3 = pd.pivot_table(
-        team_gw_prev2,
-        values=["total_points", "played60"],
-        index=["opponent_team", "was_home", "pos"],
-        aggfunc=np.sum,
-        fill_value=0,
-    ).reset_index()
-    team_gw_prev3.columns = ["team", "home", "pos", "players", "points"]
-    team_gw_prev3["ppg"] = team_gw_prev3["points"] / team_gw_prev3["players"]
-
-    team_gw_prev5 = team_gw_prev3.copy()
-    team_gw_prev5["ppgh"] = np.where(team_gw_prev5["home"], team_gw_prev5["ppg"], 0)
-    team_gw_prev5["ppga"] = np.where(~team_gw_prev5["home"], team_gw_prev5["ppg"], 0)
-
-    team_gw_prev6 = pd.pivot_table(
-        team_gw_prev5,
-        values=["ppgh", "ppga"],
-        index=["team", "pos"],
-        aggfunc=np.sum,
-        fill_value=0,
-    ).reset_index()
-
-    team_gw_prev7 = team_gw_prev6.merge(
-        teams3[["id", "short_name"]], left_on="team", right_on="id"
-    )
-    team_gw_prev8 = team_gw_prev7[["short_name", "pos", "ppgh", "ppga"]]
-    team_gw_prev8.columns = ["team_code", "pos", "ppgh", "ppga"]
-
-    # Map relegated -> promoted
-    team_gw_prev8["team_new"] = np.select(
-        [
-            team_gw_prev8["team_code"] == VAR_REL1,
-            team_gw_prev8["team_code"] == VAR_REL2,
-            team_gw_prev8["team_code"] == VAR_REL3,
-        ],
-        [VAR_PRO1, VAR_PRO2, VAR_PRO3],
-        default=team_gw_prev8["team_code"],
-    )
-
-    team_gw_prev9 = team_gw_prev8.merge(
-        teams[["team_code", "team_id"]],
-        left_on="team_new",
-        right_on="team_code",
-    )
-
-    # --------------------------------------------------------------------------------------
-    # 9) Upcoming fixtures (next 6 GWs)
-    # --------------------------------------------------------------------------------------
-    fixtures = pd.DataFrame(json2)[["event", "team_h", "team_a"]]
-    fixtures2 = fixtures[
-        (fixtures["event"] >= VAR_GW) & (fixtures["event"] <= VAR_GW + 5)
-    ].copy()
-
-    fixtures_h1 = (
-        fixtures2.pivot(index="team_h", columns="event", values="team_a")
-        .reset_index()
-        .fillna(0)
-        .astype(int)
-    )
-    fixtures_a1 = (
-        fixtures2.pivot(index="team_a", columns="event", values="team_h")
-        .reset_index()
-        .fillna(0)
-        .astype(int)
-    )
-
-    fixtures_h1.columns = ["team_h", "a1", "a2", "a3", "a4", "a5", "a6"]
-    fixtures_a1.columns = ["team_a", "h1", "h2", "h3", "h4", "h5", "h6"]
-
-    lookup_team1 = dict(zip(teams["team_id"], teams["team_code"]))
+    lookup_team1 = dict(zip(teams[['team_id','team_code']].team_id,teams[['team_id','team_code']].team_code))
     fixtures_h4 = fixtures_h1.replace(lookup_team1)
     fixtures_a4 = fixtures_a1.replace(lookup_team1)
 
-    # --------------------------------------------------------------------------------------
-    # 10) Turn fixtures into FDR for ATT/DEF/GK
-    # --------------------------------------------------------------------------------------
-    fix_att1 = team_gw_prev9[team_gw_prev9["pos"] == "ATT"].copy()
-    fix_def1 = team_gw_prev9[team_gw_prev9["pos"] == "DEF"].copy()
-    fix_gk1 = team_gw_prev9[team_gw_prev9["pos"] == "GK"].copy()
+    # ------------------------------------------------------------------------------------------
+    # ---- Merge fixtures into players ----
+    fix_att1 = team_gw_prev9[team_gw_prev9['pos'] == 'ATT']
+    fix_def1 = team_gw_prev9[team_gw_prev9['pos'] == 'DEF']
+    fix_gk1  = team_gw_prev9[team_gw_prev9['pos'] == 'GK']
 
-    lookup_home_att = dict(zip(fix_att1["team_new"], fix_att1["ppgh"]))
-    lookup_home_def = dict(zip(fix_def1["team_new"], fix_def1["ppgh"]))
-    lookup_home_gk = dict(zip(fix_gk1["team_new"], fix_gk1["ppgh"]))
+    lookup_home_att = dict(zip(fix_att1['team_new'], fix_att1['ppgh']))
+    lookup_home_def = dict(zip(fix_def1['team_new'], fix_def1['ppgh']))
+    lookup_home_gk  = dict(zip(fix_gk1['team_new'],  fix_gk1['ppgh']))
+    lookup_away_att = dict(zip(fix_att1['team_new'], fix_att1['ppga']))
+    lookup_away_def = dict(zip(fix_def1['team_new'], fix_def1['ppga']))
+    lookup_away_gk  = dict(zip(fix_gk1['team_new'],  fix_gk1['ppga']))
 
-    lookup_away_att = dict(zip(fix_att1["team_new"], fix_att1["ppga"]))
-    lookup_away_def = dict(zip(fix_def1["team_new"], fix_def1["ppga"]))
-    lookup_away_gk = dict(zip(fix_gk1["team_new"], fix_gk1["ppga"]))
-
+    # turn home fixtures into future points
     fixtures_home_att = fixtures_h4.copy()
     fixtures_home_def = fixtures_h4.copy()
-    fixtures_home_gk = fixtures_h4.copy()
+    fixtures_home_gk  = fixtures_h4.copy()
+
+    cols_to_replace1 = fixtures_home_att.columns[1:]
+    cols_to_replace2 = fixtures_home_def.columns[1:]
+    cols_to_replace3 = fixtures_home_gk.columns[1:]
+
+    fixtures_home_att[cols_to_replace1] = fixtures_home_att[cols_to_replace1].replace(lookup_away_att)
+    fixtures_home_def[cols_to_replace2] = fixtures_home_def[cols_to_replace2].replace(lookup_away_def)
+    fixtures_home_gk[cols_to_replace3]  = fixtures_home_gk[cols_to_replace3].replace(lookup_away_gk)
+
+    # turn away fixtures into future points
     fixtures_away_att = fixtures_a4.copy()
     fixtures_away_def = fixtures_a4.copy()
-    fixtures_away_gk = fixtures_a4.copy()
+    fixtures_away_gk  = fixtures_a4.copy()
 
-    cols_home = fixtures_home_att.columns[1:]
-    fixtures_home_att[cols_home] = fixtures_home_att[cols_home].replace(lookup_away_att)
-    fixtures_home_def[cols_home] = fixtures_home_def[cols_home].replace(lookup_away_def)
-    fixtures_home_gk[cols_home] = fixtures_home_gk[cols_home].replace(lookup_away_gk)
+    cols_to_replace4 = fixtures_away_att.columns[1:]
+    cols_to_replace5 = fixtures_away_def.columns[1:]
+    cols_to_replace6 = fixtures_away_gk.columns[1:]
 
-    cols_away = fixtures_away_att.columns[1:]
-    fixtures_away_att[cols_away] = fixtures_away_att[cols_away].replace(lookup_home_att)
-    fixtures_away_def[cols_away] = fixtures_away_def[cols_away].replace(lookup_home_def)
-    fixtures_away_gk[cols_away] = fixtures_away_gk[cols_away].replace(lookup_home_gk)
+    fixtures_away_att[cols_to_replace4] = fixtures_away_att[cols_to_replace4].replace(lookup_home_att)
+    fixtures_away_def[cols_to_replace5] = fixtures_away_def[cols_to_replace5].replace(lookup_home_def)
+    fixtures_away_gk[cols_to_replace6]  = fixtures_away_gk[cols_to_replace6].replace(lookup_home_gk)
 
-    for df in [
-        fixtures_home_att,
-        fixtures_home_def,
-        fixtures_home_gk,
-        fixtures_away_att,
-        fixtures_away_def,
-        fixtures_away_gk,
-    ]:
-        df.columns = ["team", "op1", "op2", "op3", "op4", "op5", "op6"]
+    new_cols = ['team','op1','op2','op3','op4','op5','op6']
+    for df in [fixtures_home_att,fixtures_home_def,fixtures_home_gk,fixtures_away_att,fixtures_away_def,fixtures_away_gk]:
+        df.columns = new_cols
 
-    fixtures_att = pd.concat([fixtures_home_att, fixtures_away_att], ignore_index=True)
-    fixtures_def = pd.concat([fixtures_home_def, fixtures_away_def], ignore_index=True)
-    fixtures_gk = pd.concat([fixtures_home_gk, fixtures_away_gk], ignore_index=True)
+    fixtures_att = pd.concat([fixtures_home_att,fixtures_away_att])
+    fixtures_def = pd.concat([fixtures_home_def,fixtures_away_def])
+    fixtures_gk  = pd.concat([fixtures_home_gk, fixtures_away_gk])
 
-    fixtures_att1 = fixtures_att.groupby("team", as_index=False).sum()
-    fixtures_def1 = fixtures_def.groupby("team", as_index=False).sum()
-    fixtures_gk1 = fixtures_gk.groupby("team", as_index=False).sum()
+    fixtures_att1 = fixtures_att.groupby('team', as_index=False).sum()
+    fixtures_def1 = fixtures_def.groupby('team', as_index=False).sum()
+    fixtures_gk1  = fixtures_gk.groupby('team',  as_index=False).sum()
 
-    fixtures_att1["fdr"] = fixtures_att1.iloc[:, 1:].sum(axis=1)
-    fixtures_def1["fdr"] = fixtures_def1.iloc[:, 1:].sum(axis=1)
-    fixtures_gk1["fdr"] = fixtures_gk1.iloc[:, 1:].sum(axis=1)
+    fixtures_att1['fdr'] = fixtures_att1.iloc[:,1:].sum(axis=1)
+    fixtures_def1['fdr'] = fixtures_def1.iloc[:,1:].sum(axis=1)
+    fixtures_gk1['fdr']  = fixtures_gk1.iloc[:,1:].sum(axis=1)
 
-    # Attach fixtures to players by position type
-    gkp_df = players5[players5["pos"] == "GKP"].merge(fixtures_gk1, on="team", how="left")
-    def_df = players5[players5["pos"] == "DEF"].merge(fixtures_def1, on="team", how="left")
-    att_df = players5[~players5["pos"].isin(["GKP", "DEF"])].merge(
-        fixtures_att1, on="team", how="left"
-    )
+    gkp_df = players5[players5['pos'] == 'GKP'].merge(fixtures_gk1, on='team', how='left')
+    def_df = players5[players5['pos'] == 'DEF'].merge(fixtures_def1, on='team', how='left')
+    att_df = players5[~players5['pos'].isin(['GKP', 'DEF'])].merge(fixtures_att1, on='team', how='left')
+    players6 = pd.concat([gkp_df, def_df, att_df], ignore_index=True).sort_values(by='cost', ascending=False).reset_index(drop=True)
 
-    players6 = (
-        pd.concat([gkp_df, def_df, att_df], ignore_index=True)
-        .sort_values(by="cost", ascending=False)
-        .reset_index(drop=True)
-    )
-
-    # --------------------------------------------------------------------------------------
-    # 11) Add FPL ep_next + flags, xMins, and projected points
-    # --------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------
+    # ---- Add extra player data ----
     players7 = players6.copy()
+    player_data = players[['first_name','second_name','ep_next','chance_of_playing_next_round']]
+    player_data['name'] = player_data['first_name']+' '+player_data['second_name']
+    player_data = player_data.drop(columns=['first_name', 'second_name'])
+    player_data = player_data[['name','ep_next','chance_of_playing_next_round']]
+    player_data.columns = ['name_fpl','ep_fpl','flag_fpl']
+    players8 = players7.merge(player_data,left_on='name',right_on='name_fpl',how='left')
 
-    player_data = players[
-        ["first_name", "second_name", "ep_next", "chance_of_playing_next_round"]
-    ].copy()
-    player_data["name"] = player_data["first_name"] + " " + player_data["second_name"]
-    player_data = player_data[["name", "ep_next", "chance_of_playing_next_round"]]
-    player_data.columns = ["name_fpl", "ep_fpl", "flag_fpl"]
+    # xmins
+    players8 = players8.merge(xm_manual,left_on='name',right_on='xm_name',how='left')
+    players8['xm_ty'] = players8['mins']/VAR_GW0
+    players8['xm_ly'] = (players8['mins_ly']/38).clip(lower=40).fillna(0)
+    players8['xm_max'] = np.where(players8['flag_fpl'].isna(),players8['xm_form'],players8['xm_form'] * (players8['flag_fpl']/100))
+    players8['xm'] = round((players8['xm_max'] + players8['xm_ty']) / 2 ,2)
+    players8['xm'] = np.where(players8['xm_manual'].isna(), players8['xm'], players8['xm_manual'])
 
-    players8 = players7.merge(player_data, left_on="name", right_on="name_fpl", how="left")
+    # get predicted points
+    players9 = players8.copy()
+    players9 = players9.fillna(0)
+    players9['ep_fpl'] = pd.to_numeric(players9['ep_fpl'], errors='coerce')
+    players9['mean_value'] = round(players9[['pred_pp90_form','pp90_ly','ep_fpl']].mean(axis=1),2)
+    players9['mean_value'] = np.where(players9['pp90_ly']==0,players9[['pred_pp90_form','ep_fpl']].mean(axis=1),players9['mean_value'])
+    players9['base_points'] = round( (players9['mean_value']/90) * players9['xm'] ,2)
+    players9['bp_copy'] = players9['base_points']
 
-    # xMins inputs
-    if "xm_name" not in xm_manual.columns and "name" in xm_manual.columns:
-        xm_manual = xm_manual.rename(columns={"name": "xm_name"})
-    players8 = players8.merge(xm_manual, left_on="name", right_on="xm_name", how="left")
+    players9['gw1'] = round(players9[['op1','base_points','bp_copy']].mean(axis=1),2)
+    players9['gw2'] = round(players9[['op2','base_points','bp_copy']].mean(axis=1),2)
+    players9['gw3'] = round(players9[['op3','base_points','bp_copy']].mean(axis=1),2)
+    players9['gw4'] = round(players9[['op4','base_points','bp_copy']].mean(axis=1),2)
+    players9['gw5'] = round(players9[['op5','base_points','bp_copy']].mean(axis=1),2)
+    players9['gw6'] = round(players9[['op6','base_points','bp_copy']].mean(axis=1),2)
 
-    players8["xm_ty"] = players8["mins"] / max(VAR_GW0, 1)
-    players8["xm_ly"] = (players8["mins_ly"] / 38).clip(lower=40).fillna(0)
+    players9['predicted_points'] = players9[['gw1','gw2','gw3','gw4','gw5','gw6']].sum(axis=1)
+    players9[['op1','op2','op3','op4','op5','op6','fdr']] = players9[['op1','op2','op3','op4','op5','op6','fdr']].round(2)
 
-    # Adjust form xMins by flag
-    players8["xm_max"] = np.where(
-        players8["flag_fpl"].isna(),
-        players8["xm_form"],
-        players8["xm_form"] * (players8["flag_fpl"] / 100.0),
-    )
-    players8["xm"] = ((players8["xm_max"] + players8["xm_ty"]) / 2.0).round(2)
-    players8["xm"] = np.where(players8["xm_manual"].isna(), players8["xm"], players8["xm_manual"])
+    players10 = players9.sort_values(by='points', ascending=False)
+    players10 = players10[np.isfinite(players10['predicted_points'])]
 
-    # Predicted points core calculation
-    players9 = players8.copy().fillna(0)
-    players9["ep_fpl"] = pd.to_numeric(players9["ep_fpl"], errors="coerce")
+    final_pos = positions[['pos','id']]
+    final_pos.columns = ['pos_code','pos_id']
+    players10 = players10.merge(final_pos,left_on='pos',right_on='pos_code',how='left')
 
-    players9["mean_value"] = players9[
-        ["pred_pp90_form", "pp90_ly", "ep_fpl"]
-    ].mean(axis=1, skipna=True)
+    player_output = players10[['name','team','pos','ownership','points','mins','xm','points_ly','xg','xa','cs','dc','predicted_points','base_points','mean_value','xopp90_form','pred_pp90_form','pp90_ly','ep_fpl']]
 
-    # If no last-season pp90, ignore pp90_ly
-    mask_no_ly = players9["pp90_ly"].fillna(0) == 0
-    players9.loc[mask_no_ly, "mean_value"] = players9.loc[
-        mask_no_ly, ["pred_pp90_form", "ep_fpl"]
-    ].mean(axis=1, skipna=True)
+    player_output['xg'] = pd.to_numeric(player_output['xg'], errors='coerce')
+    player_output['xa'] = pd.to_numeric(player_output['xa'], errors='coerce')
 
-    players9["mean_value"] = players9["mean_value"].round(2)
-    players9["base_points"] = ((players9["mean_value"] / 90.0) * players9["xm"]).round(2)
-    players9["bp_copy"] = players9["base_points"]
+    player_output['xg_p90'] = ( player_output['xg'] / ( player_output['mins'] / 90 ) ).round(2)
+    player_output['xa_p90'] = ( player_output['xa'] / ( player_output['mins'] / 90 ) ).round(2)
+    player_output['cs_p90'] = ( player_output['cs'] / ( player_output['mins'] / 90 ) ).round(2)
+    player_output['dc_p90'] = ( player_output['dc'] / ( player_output['mins'] / 90 ) ).round(2)
 
-    # Compute gw1..gw6 points from FDR + base points (simple mean of three)
-    for idx, col in enumerate(["gw1", "gw2", "gw3", "gw4", "gw5", "gw6"], start=1):
-        op_col = f"op{idx}"
-        players9[col] = players9[[op_col, "base_points", "bp_copy"]].mean(axis=1).round(2)
+    player_output = player_output[['name','team','pos','ownership','points','mins','points_ly','xg','xg_p90','xa','xa_p90','cs','dc','dc_p90','xopp90_form','pred_pp90_form','base_points','predicted_points']]
+    player_output = player_output.fillna(0)
+    player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
-    players9["predicted_points"] = players9[[f"gw{i}" for i in range(1, 7)]].sum(axis=1)
+    output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
+    output.columns = ['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
+    output = output.sort_values(by='predicted_points', ascending=False)
 
-    fdr_cols = ["op1", "op2", "op3", "op4", "op5", "op6", "fdr"]
-    players9[fdr_cols] = players9[fdr_cols].round(2)
-
-    players10 = players9.sort_values(by="points", ascending=False)
-    players10 = players10[np.isfinite(players10["predicted_points"])]
-
-    # Attach pos_id
-    final_pos = positions[["pos", "id"]]  # 'pos' is the short name from element_types
-    final_pos.columns = ["pos_code", "pos_id"]
-    players10 = players10.merge(final_pos, left_on="pos", right_on="pos_code", how="left")
-
-    # --------------------------------------------------------------------------------------
-    # 12) Build player_output (diagnostics table)
-    # --------------------------------------------------------------------------------------
-    player_output = players10[
-        [
-            "name",
-            "team",
-            "pos",
-            "ownership",
-            "points",
-            "mins",
-            "xm",
-            "points_ly",
-            "xg",
-            "xa",
-            "cs",
-            "dc",
-            "predicted_points",
-            "base_points",
-            "mean_value",
-            "xopp90_form",
-            "pred_pp90_form",
-            "pp90_ly",
-            "ep_fpl",
-        ]
-    ].copy()
-
-    player_output["xg"] = pd.to_numeric(player_output["xg"], errors="coerce")
-    player_output["xa"] = pd.to_numeric(player_output["xa"], errors="coerce")
-
-    # Per 90 stats
-    with np.errstate(divide="ignore", invalid="ignore"):
-        player_output["xg_p90"] = (player_output["xg"] / (player_output["mins"] / 90.0)).round(2)
-        player_output["xa_p90"] = (player_output["xa"] / (player_output["mins"] / 90.0)).round(2)
-        player_output["cs_p90"] = (player_output["cs"] / (player_output["mins"] / 90.0)).round(2)
-        player_output["dc_p90"] = (player_output["dc"] / (player_output["mins"] / 90.0)).round(2)
-
-    player_output = player_output[
-        [
-            "name",
-            "team",
-            "pos",
-            "ownership",
-            "points",
-            "mins",
-            "points_ly",
-            "xg",
-            "xg_p90",
-            "xa",
-            "xa_p90",
-            "cs",
-            "dc",
-            "dc_p90",
-            "xopp90_form",
-            "pred_pp90_form",
-            "base_points",
-            "predicted_points",
-        ]
-    ].fillna(0)
-    player_output = player_output.sort_values(by="predicted_points", ascending=False)
-
-    # --------------------------------------------------------------------------------------
-    # 13) Build output universe for optimiser
-    # --------------------------------------------------------------------------------------
-    output = players10[
-        [
-            "name",
-            "team",
-            "pos",
-            "pos_id",
-            "cost",
-            "ownership",
-            "predicted_points",
-            "xm",
-            "fdr",
-            "gw1",
-            "gw2",
-            "gw3",
-            "gw4",
-            "gw5",
-            "gw6",
-        ]
-    ].copy()
-
-    output.columns = [
-        "name",
-        "team",
-        "pos",
-        "pos_id",
-        "cost",
-        "ownership",
-        "predicted_points",
-        "xm",
-        "fdr",
-        VGW_NAME_1,
-        VGW_NAME_2,
-        VGW_NAME_3,
-        VGW_NAME_4,
-        VGW_NAME_5,
-        VGW_NAME_6,
-    ]
-
-    output = output.sort_values(by="predicted_points", ascending=False)
-
-    # --------------------------------------------------------------------------------------
-    # 14) Fetch current squad names (normal mode only)
-    # --------------------------------------------------------------------------------------
+    # ---- FPL ID Squad Fetch (from picks_data) ----
     current_names = []
-    if fpl_id and picks_data and optimisation_mode != "free_hit":
-        player_ids = [p["element"] for p in picks_data]
-        players_data = json1["elements"]
-        id_to_name = {
-            p["id"]: f"{p['first_name']} {p['second_name']}" for p in players_data
-        }
+    if fpl_id and picks_data and optimisation_mode != "gw1_only":
+        player_ids = [p['element'] for p in picks_data]
+        players_data = json1['elements']  # already loaded above
+        id_to_name = {p['id']: f"{p['first_name']} {p['second_name']}" for p in players_data}
         current_names = [id_to_name[pid] for pid in player_ids if pid in id_to_name]
 
-    # --------------------------------------------------------------------------------------
-    # 15) Linear Programming Optimisation
-    # --------------------------------------------------------------------------------------
+    # ---- LP Optimisation ----
     prob = pulp.LpProblem("FPL_Team_Selection", pulp.LpMaximize)
 
-    # Decision vars – whether each player is in the 15-man squad
+    # decision vars
     player_vars = pulp.LpVariable.dicts("Player", output.index, 0, 1, pulp.LpBinary)
 
-    # Weeks to optimise over
-    if optimisation_mode == "free_hit":
-        # Free Hit: just this upcoming GW
+    # weeks to optimise over
+    if optimisation_mode == "gw1_only":
         weeks = [VGW_NAME_1]
     else:
-        # Normal mode: next 6 GWs
-        weeks = [VGW_NAME_1, VGW_NAME_2, VGW_NAME_3, VGW_NAME_4, VGW_NAME_5, VGW_NAME_6]
+        weeks = [VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
 
-    week_vars = {
-        w: pulp.LpVariable.dicts(f"Week_{w}", output.index, 0, 1, pulp.LpBinary)
-        for w in weeks
-    }
+    week_vars = {w: pulp.LpVariable.dicts(f"Week_{w}", output.index, 0, 1, pulp.LpBinary) for w in weeks}
 
     # ---- Squad constraints ----
     # Total squad size
     prob += pulp.lpSum(player_vars[i] for i in output.index) == 15
 
     # Positional quotas
-    prob += pulp.lpSum(
-        player_vars[i] for i in output.index if output.loc[i, "pos"] == "GKP"
-    ) == 2
-    prob += pulp.lpSum(
-        player_vars[i] for i in output.index if output.loc[i, "pos"] == "DEF"
-    ) == 5
-    prob += pulp.lpSum(
-        player_vars[i] for i in output.index if output.loc[i, "pos"] == "MID"
-    ) == 5
-    prob += pulp.lpSum(
-        player_vars[i] for i in output.index if output.loc[i, "pos"] == "FWD"
-    ) == 3
+    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'GKP') == 2
+    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'DEF') == 5
+    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'MID') == 5
+    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'FWD') == 3
 
     # Budget
-    prob += (
-        pulp.lpSum(output.loc[i, "cost"] * player_vars[i] for i in output.index) <= budget
-    )
+    prob += pulp.lpSum(output.loc[i, 'cost'] * player_vars[i] for i in output.index) <= budget
 
     # Max 3 players per team
-    for team in output["team"].unique():
-        prob += (
-            pulp.lpSum(
-                player_vars[i] for i in output.index if output.loc[i, "team"] == team
-            )
-            <= 3
-        )
+    for team in output['team'].unique():
+        prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'team'] == team) <= 3
 
-    # Exclusions (hard)
-    exclude_names_set = set(exclude_names or [])
-    exclude_teams_set = set(exclude_teams or [])
-
+    # --- Exclusions (hard)
     for i in output.index:
-        if (output.loc[i, "name"] in exclude_names_set) or (
-            output.loc[i, "team"] in exclude_teams_set
-        ):
+        if (output.loc[i,'name'] in exclude_names) or (output.loc[i,'team'] in exclude_teams):
             prob += player_vars[i] == 0
 
-    # Must-includes (hard locks)
-    must_include_set = set(n.strip() for n in (include_names or []) if n.strip())
+    # --- MUST INCLUDE (use your include_names list as hard locks)
+    must_include_set = set(n.strip() for n in include_names if n.strip())
     for i in output.index:
-        if output.loc[i, "name"] in must_include_set:
+        if output.loc[i,'name'] in must_include_set:
             prob += player_vars[i] == 1
 
-    # Transfer constraint (normal mode only)
-    if optimisation_mode != "free_hit" and current_names:
-        current_idx = [
-            i for i in output.index if output.loc[i, "name"] in set(current_names)
-        ]
-        kept_target = max(0, len(current_idx) - int(transfers or 0))
+    # --- HARD TRANSFER LIMIT relative to your current team
+    # Only in normal mode (not Free Hit). Only consider current players in `output`.
+    if optimisation_mode != "gw1_only" and current_names:
+        current_idx = [i for i in output.index if output.loc[i,'name'] in set(current_names)]
+        kept_target = max(0, len(current_idx) - transfers)   # exactly this many current players must remain
         prob += pulp.lpSum(player_vars[i] for i in current_idx) == kept_target
 
-    # Weekly starting XI (link & formation)
+    # --- Weekly starting XI (link & formation)
     for w in weeks:
-        # Starter must be in squad
         for i in output.index:
-            prob += week_vars[w][i] <= player_vars[i]
-
-        # Exactly 11 starters
+            prob += week_vars[w][i] <= player_vars[i]           # starter must be in squad
         prob += pulp.lpSum(week_vars[w][i] for i in output.index) == 11
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='GKP') == 1
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='DEF') >= 3
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='DEF') <= 5
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='MID') >= 2
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='MID') <= 5
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='FWD') >= 1
+        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='FWD') <= 3
 
-        # 1 GKP
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "GKP"
-            )
-            == 1
-        )
-
-        # DEF 3–5
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "DEF"
-            )
-            >= 3
-        )
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "DEF"
-            )
-            <= 5
-        )
-
-        # MID 2–5
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "MID"
-            )
-            >= 2
-        )
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "MID"
-            )
-            <= 5
-        )
-
-        # FWD 1–3
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "FWD"
-            )
-            >= 1
-        )
-        prob += (
-            pulp.lpSum(
-                week_vars[w][i]
-                for i in output.index
-                if output.loc[i, "pos"] == "FWD"
-            )
-            <= 3
-        )
-
-    # Objective: maximise points from starters only over the chosen weeks
-    prob += pulp.lpSum(
-        output.loc[i, w] * week_vars[w][i] for w in weeks for i in output.index
-    )
+    # --- Objective: starters only
+    prob += pulp.lpSum(output.loc[i, w] * week_vars[w][i] for w in weeks for i in output.index)
 
     # Solve
     _ = prob.solve(pulp.PULP_CBC_CMD(msg=False))
 
-    # --------------------------------------------------------------------------------------
-    # 16) Extract final selected squad
-    # --------------------------------------------------------------------------------------
-    selected_mask = [player_vars[i].value() == 1 for i in output.index]
-    selected_team = output[selected_mask].copy()
-
-    def _start_weeks(idx):
-        return ", ".join([w for w in weeks if week_vars[w][idx].value() == 1])
-
-    selected_team["starting_weeks"] = [
-        _start_weeks(i) for i in selected_team.index
-    ]
-
-    selected_team = selected_team.sort_values(
-        by=["pos_id", "cost", "predicted_points"],
-        ascending=[True, False, False],
-    )
-
-    selected_team = selected_team[
-        [
-            "name",
-            "team",
-            "pos",
-            "cost",
-            "ownership",
-            "predicted_points",
-            "xm",
-            "fdr",
-            VGW_NAME_1,
-            VGW_NAME_2,
-            VGW_NAME_3,
-            VGW_NAME_4,
-            VGW_NAME_5,
-            VGW_NAME_6,
-            "starting_weeks",
-        ]
-    ]
+    selected_team = output[[player_vars[i].value() == 1 for i in output.index]].copy()
+    selected_team['starting_weeks'] = selected_team.index.map(lambda i: ', '.join([w for w in weeks if week_vars[w][i].value() == 1]))
+    selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
+    selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6,'starting_weeks']]
 
     return selected_team, output, player_output, fixtures_att1, fixtures_def1, current_names
