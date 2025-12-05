@@ -434,7 +434,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                 weeks_for_breakdown = [VGW_NAME_1, VGW_NAME_2, VGW_NAME_3, VGW_NAME_4, VGW_NAME_5, VGW_NAME_6]
 
             # Make sure we don't blow up if columns are missing
-            weeks_for_breakdown = [w for w in weeks_for_breakdown if w in team_df.columns]
+            weeks_for_breakdown = [w for w in weeks_for_breakdown if w in st.session_state.final_team.columns]
 
             breakdown_rows = []
 
@@ -448,10 +448,10 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
             for w in weeks_for_breakdown:
                 # mask of starters / bench for that week
-                starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
+                starter_mask = st.session_state.final_team.apply(is_starter_for_week, axis=1, week_name=w)
 
                 # handle NaNs when summing
-                gw_points = team_df[w].fillna(0)
+                gw_points = st.session_state.final_team[w].fillna(0)
                 xi_points = gw_points[starter_mask].sum()
                 bench_points = gw_points[~starter_mask].sum()
                 squad_total = gw_points.sum()
