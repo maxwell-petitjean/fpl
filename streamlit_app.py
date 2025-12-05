@@ -424,62 +424,62 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
                 st.markdown("---")
 
-            # === Weekly points breakdown (XI vs bench) ===
-            st.markdown("### 📆 Weekly points breakdown")
+        # === Weekly points breakdown (XI vs bench) ===
+        st.markdown("### 📆 Weekly points breakdown")
 
-            team_df = st.session_state.final_team.copy()
+        team_df = st.session_state.final_team.copy()
 
-            # Decide which weeks to show
-            if optimisation_mode_input == "gw1_only":
-                weeks_for_breakdown = [VGW_NAME_1]
-            else:
-                weeks_for_breakdown = [
-                    VGW_NAME_1, VGW_NAME_2, VGW_NAME_3,
-                    VGW_NAME_4, VGW_NAME_5, VGW_NAME_6
-                ]
+        # Decide which weeks to show
+        if optimisation_mode_input == "gw1_only":
+            weeks_for_breakdown = [VGW_NAME_1]
+        else:
+            weeks_for_breakdown = [
+                VGW_NAME_1, VGW_NAME_2, VGW_NAME_3,
+                VGW_NAME_4, VGW_NAME_5, VGW_NAME_6
+            ]
 
-            # Only keep weeks that actually exist in the dataframe
-            weeks_for_breakdown = [w for w in weeks_for_breakdown if w in team_df.columns]
+        # Only keep weeks that actually exist in the dataframe
+        weeks_for_breakdown = [w for w in weeks_for_breakdown if w in team_df.columns]
 
-            def is_starter_for_week(row, week_name: str) -> bool:
-                sw = row.get("starting_weeks", "")
-                if not isinstance(sw, str) or not sw.strip():
-                    return False
-                weeks_list = [x.strip() for x in sw.split(",") if x.strip()]
-                return week_name in weeks_list
+        def is_starter_for_week(row, week_name: str) -> bool:
+            sw = row.get("starting_weeks", "")
+            if not isinstance(sw, str) or not sw.strip():
+                return False
+            weeks_list = [x.strip() for x in sw.split(",") if x.strip()]
+            return week_name in weeks_list
 
-            breakdown_rows = []
+        breakdown_rows = []
 
-            for w in weeks_for_breakdown:
-                starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
+        for w in weeks_for_breakdown:
+            starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
 
-                gw_points = pd.to_numeric(team_df[w], errors="coerce").fillna(0)
+            gw_points = pd.to_numeric(team_df[w], errors="coerce").fillna(0)
 
-                xi_points = gw_points[starter_mask].sum()
-                bench_points = gw_points[~starter_mask].sum()
-                squad_total = gw_points.sum()
+            xi_points = gw_points[starter_mask].sum()
+            bench_points = gw_points[~starter_mask].sum()
+            squad_total = gw_points.sum()
 
-                breakdown_rows.append({
-                    "Week": w.upper(),
-                    "XI points": round(xi_points, 2),
-                    "Bench points": round(bench_points, 2),
-                    "Squad total": round(squad_total, 2),
-                })
+            breakdown_rows.append({
+                "Week": w.upper(),
+                "XI points": round(xi_points, 2),
+                "Bench points": round(bench_points, 2),
+                "Squad total": round(squad_total, 2),
+            })
 
-            weekly_df = pd.DataFrame(breakdown_rows)
+        weekly_df = pd.DataFrame(breakdown_rows)
 
-            if not weekly_df.empty:
-                styled_weekly = (
-                    weekly_df.style
-                    .background_gradient(subset=["Bench points"], cmap="Purples")
-                    .format(precision=2)
-                )
-                st.dataframe(
-                    styled_weekly,
-                    use_container_width=True,
-                )
-            else:
-                st.info("No weekly breakdown available.")
+        if not weekly_df.empty:
+            styled_weekly = (
+                weekly_df.style
+                .background_gradient(subset=["Bench points"], cmap="Purples")
+                .format(precision=2)
+            )
+            st.dataframe(
+                styled_weekly,
+                use_container_width=True,
+            )
+        else:
+            st.info("No weekly breakdown available.")
 
 
 
