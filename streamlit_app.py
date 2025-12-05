@@ -422,12 +422,11 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                 else:
                     st.dataframe(added_df.round(2), use_container_width=True, height=220)
 
-            st.markdown("---")
+                st.markdown("---")
 
             # === Weekly points breakdown (XI vs bench) ===
             st.markdown("### 📆 Weekly points breakdown")
 
-            # Make sure we can reference the team data
             team_df = st.session_state.final_team.copy()
 
             # Decide which weeks to show
@@ -454,7 +453,6 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             for w in weeks_for_breakdown:
                 starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
 
-                # get row-wise projected points (replace NaN with 0)
                 gw_points = pd.to_numeric(team_df[w], errors="coerce").fillna(0)
 
                 xi_points = gw_points[starter_mask].sum()
@@ -468,23 +466,21 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                     "Squad total": round(squad_total, 2),
                 })
 
-                weekly_df = pd.DataFrame(breakdown_rows)
+            weekly_df = pd.DataFrame(breakdown_rows)
 
-        # 🔥 Bench Boost Potential cue via colour:
-        # - Bench points column gets a gradient
-        # - Darker = better bench boost week
-        if not weekly_df.empty:
-            styled_weekly = (
-                weekly_df.style
-                .background_gradient(subset=["Bench points"], cmap="Purples")
-                .format(precision=2)
-            )
-            st.dataframe(
-                styled_weekly,
-                use_container_width=True,
-            )
-        else:
-            st.info("No weekly breakdown available.")
+            if not weekly_df.empty:
+                styled_weekly = (
+                    weekly_df.style
+                    .background_gradient(subset=["Bench points"], cmap="Purples")
+                    .format(precision=2)
+                )
+                st.dataframe(
+                    styled_weekly,
+                    use_container_width=True,
+                )
+            else:
+                st.info("No weekly breakdown available.")
+
 
 
         # Styled final team table
