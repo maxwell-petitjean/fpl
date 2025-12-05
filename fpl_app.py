@@ -443,130 +443,117 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             "text/csv",
         )
 
-    # --- Tab 2 — Captain Ranking (Safe vs Punt) ---
-    with tab2:
-        st.subheader("🎯 Captain Ranking")
+    # --- Tab 2 — Captain Ranking (Safe vs Punt, Top 5 Each) ---
+with tab2:
+    st.subheader("🎯 Captain Ranking")
 
-        pool = st.session_state.raw_output.copy()
+    pool = st.session_state.raw_output.copy()
 
-        if VGW_NAME_1 not in pool.columns:
-            st.info("GW column not found in output – try re-running the model.")
-        else:
-            # Ensure numeric types
-            pool[VGW_NAME_1] = pd.to_numeric(pool[VGW_NAME_1], errors="coerce")
-            if "predicted_points" in pool.columns:
-                pool["predicted_points"] = pd.to_numeric(
-                    pool["predicted_points"], errors="coerce"
-                )
-            if "ownership" in pool.columns:
-                pool["ownership"] = pd.to_numeric(
-                    pool["ownership"], errors="coerce"
-                )
+    if VGW_NAME_1 not in pool.columns:
+        st.info("GW column not found in output – try re-running the model.")
+    else:
+        # Ensure numeric types
+        pool[VGW_NAME_1] = pd.to_numeric(pool[VGW_NAME_1], errors="coerce")
+        if "predicted_points" in pool.columns:
+            pool["predicted_points"] = pd.to_numeric(pool["predicted_points"], errors="coerce")
+        if "ownership" in pool.columns:
+            pool["ownership"] = pd.to_numeric(pool["ownership"], errors="coerce")
 
-            # Basic captain pool
-            cols = ["name", "team", "pos", VGW_NAME_1]
-            if "predicted_points" in pool.columns:
-                cols.append("predicted_points")
-            if "ownership" in pool.columns:
-                cols.append("ownership")
+        # Base captain dataset
+        cols = ["name", "team", "pos", VGW_NAME_1]
+        if "predicted_points" in pool.columns:
+            cols.append("predicted_points")
+        if "ownership" in pool.columns:
+            cols.append("ownership")
 
-            cap = pool[cols].copy().dropna(subset=[VGW_NAME_1])
+        cap = pool[cols].copy().dropna(subset=[VGW_NAME_1])
 
-            # Sort anchor: this GW, then total predicted
-            sort_cols = [VGW_NAME_1]
-            ascending = [False]
-            if "predicted_points" in cap.columns:
-                sort_cols.append("predicted_points")
-                ascending.append(False)
+        # Sort order: this GW first, then overall predicted
+        sort_cols = [VGW_NAME_1]
+        ascending = [False]
+        if "predicted_points" in cap.columns:
+            sort_cols.append("predicted_points")
+            ascending.append(False)
 
-            cap = cap.sort_values(by=sort_cols, ascending=ascending)
+        cap = cap.sort_values(by=sort_cols, ascending=ascending)
 
-            # Rename columns for display
-            rename_map = {
-                VGW_NAME_1: f"{VGW_NAME_1.upper()} points",
-                "predicted_points": "Total points (next 6 GWs)",
-                "ownership": "Ownership (%)",
-            }
-            cap = cap.rename(columns={k: v for k, v in rename_map.items() if k in cap.columns})
+        # Rename for display
+        rename_map = {
+            VGW_NAME_1: f"{VGW_NAME_1.upper()} points",
+            "predicted_points": "Total points (next 6 GWs)",
+            "ownership": "Ownership (%)",
+        }
+        cap = cap.rename(columns={k: v for k, v in rename_map.items() if k in cap.columns})
 
-            # Thresholds for safe / punt
-            st.markdown("Tune the thresholds below to define **safe** vs **punt** captains.")
-            c_safe, c_punt = st.columns(2)
-            with c_safe:
-                safe_min = st.number_input(
-                    "Safe pick = ownership ≥",
-                    min_value=0.0,
-                    max_value=100.0,
-                    value=30.0,
-                    step=1.0,
-                )
-            with c_punt:
-                punt_max = st.number_input(
-                    "Punt pick = ownership ≤",
-                    min_value=0.0,
-                    max_value=100.0,
-                    value=10.0,
-                    step=1.0,
-                )
-
-            # Split into safe / punt (and ignore rows without ownership)
-            if "Ownership (%)" in cap.columns:
-                cap_nonnull = cap.dropna(subset=["Ownership (%)"]).copy()
-                safe_df = cap_nonnull[cap_nonnull["Ownership (%)"] >= safe_min]
-                punt_df = cap_nonnull[cap_nonnull["Ownership (%)"] <= punt_max]
-            else:
-                st.warning("Ownership data not available – showing a single combined ranking.")
-                safe_df = pd.DataFrame()
-                punt_df = pd.DataFrame()
-
-            # Combined top ranking (overall)
-            st.markdown(
-                f"#### 🧮 Overall top captain candidates for **{VGW_NAME_1.upper()}**"
+        # Threshold selectors
+        st.markdown("Tune thresholds to define **safe** vs **punt** captains.")
+        c_safe, c_punt = st.columns(2)
+        with c_safe:
+            safe_min = st.number_input(
+                "Safe pick = ownership ≥",
+                min_value=0.0, max_value=100.0,
+                value=30.0, step=1.0,
             )
-            top_overall = cap.head(20).reset_index(drop=True)
-            num_cols_overall = top_overall.select_dtypes(include=[np.number]).columns
-            styled_overall = (
-                top_overall.style
-                .background_gradient(subset=num_cols_overall, cmap="Oranges")
+        with c_punt:
+            punt_max = st.number_input(
+                "Punt pick = ownership ≤",
+                min_value=0.0, max_value=100.0,
+                value=10.0, step=1.0,
+            )
+
+        # Ownership splits
+        if "Ownership (%)" in cap.columns:
+            cap_nonnull = cap.dropna(subset=["Ownership (%)"]).copy()
+            safe_df = cap_nonnull[cap_nonnull["Ownership (%)"] >= safe_min]
+            punt_df = cap_nonnull[cap_nonnull["Ownership (%)"] <= punt_max]
+        else:
+            st.warning("Ownership data missing — cannot split into safe/punt.")
+            safe_df = pd.DataFrame()
+            punt_df = pd.DataFrame()
+
+        # ------- TOP 5 OVERALL -------
+        st.markdown(f"### 🧮 Top 5 Overall — Best Captain Picks for **{VGW_NAME_1.upper()}**")
+        top_overall = cap.head(5).reset_index(drop=True)
+        num_cols_overall = top_overall.select_dtypes(include=[np.number]).columns
+        styled_overall = (
+            top_overall.style
+            .background_gradient(subset=num_cols_overall, cmap="Oranges")
+            .format(precision=2)
+        )
+        st.dataframe(styled_overall, use_container_width=True, height=250)
+
+        st.markdown("---")
+
+        # ------- TOP 5 SAFE -------
+        st.markdown(f"### 🟢 Top 5 Safe Captains (Ownership ≥ {safe_min:.0f}%)")
+        if safe_df.empty:
+            st.info("No safe captains match the chosen threshold.")
+        else:
+            safe_top = safe_df.head(5).reset_index(drop=True)
+            num_cols_safe = safe_top.select_dtypes(include=[np.number]).columns
+            styled_safe = (
+                safe_top.style
+                .background_gradient(subset=num_cols_safe, cmap="Greens")
                 .format(precision=2)
             )
-            st.dataframe(styled_overall, use_container_width=True, height=350)
+            st.dataframe(styled_safe, use_container_width=True, height=250)
 
-            st.markdown("---")
+        st.markdown("---")
 
-            # Safe picks
-            st.markdown(
-                f"#### 🟢 Safe captains (ownership ≥ {safe_min:.0f}%)"
+        # ------- TOP 5 PUNT -------
+        st.markdown(f"### 🔥 Top 5 Punt Captains (Ownership ≤ {punt_max:.0f}%)")
+        if punt_df.empty:
+            st.info("No punt captains match the chosen threshold.")
+        else:
+            punt_top = punt_df.head(5).reset_index(drop=True)
+            num_cols_punt = punt_top.select_dtypes(include=[np.number]).columns
+            styled_punt = (
+                punt_top.style
+                .background_gradient(subset=num_cols_punt, cmap="Reds")
+                .format(precision=2)
             )
-            if safe_df.empty:
-                st.info("No players meet the safe captain threshold with current settings.")
-            else:
-                safe_top = safe_df.head(15).reset_index(drop=True)
-                num_cols_safe = safe_top.select_dtypes(include=[np.number]).columns
-                styled_safe = (
-                    safe_top.style
-                    .background_gradient(subset=num_cols_safe, cmap="Greens")
-                    .format(precision=2)
-                )
-                st.dataframe(styled_safe, use_container_width=True, height=350)
+            st.dataframe(styled_punt, use_container_width=True, height=250)
 
-            st.markdown("---")
-
-            # Punt picks
-            st.markdown(
-                f"#### 🔥 Punt captains (ownership ≤ {punt_max:.0f}%)"
-            )
-            if punt_df.empty:
-                st.info("No players meet the punt captain threshold with current settings.")
-            else:
-                punt_top = punt_df.head(15).reset_index(drop=True)
-                num_cols_punt = punt_top.select_dtypes(include=[np.number]).columns
-                styled_punt = (
-                    punt_top.style
-                    .background_gradient(subset=num_cols_punt, cmap="Reds")
-                    .format(precision=2)
-                )
-                st.dataframe(styled_punt, use_container_width=True, height=350)
 
 
     # --- Tab 3–5 always rendered via helpers ---
