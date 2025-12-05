@@ -597,7 +597,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         styled_df = st.session_state.final_team.style.applymap(highlight_pos, subset=["pos"]) \
                                                     .background_gradient(subset=numeric_cols1, cmap="YlGnBu") \
                                                     .format(precision=2)
-        st.dataframe(styled_df, use_container_width=True, height=600)
+        st.dataframe(styled_df, use_container_width=True, height=800)
 
         csv = st.session_state.final_team.to_csv(index=False)
         st.download_button("⬇️ Download squad as CSV", csv, "squad.csv", "text/csv")
