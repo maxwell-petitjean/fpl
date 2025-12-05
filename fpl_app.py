@@ -173,7 +173,10 @@ for k, v in {
         st.session_state[k] = v
 
 # ================== RUN BUTTON ==================
-if st.button("🚀 Run Model"):
+run_clicked = st.button("🚀 Run Model")
+st.markdown("➡️ **Press the button above to generate your optimised squad and captain picks.**")
+
+if run_clicked:
     with st.spinner("Running optimisation..."):
         try:
             (
@@ -520,7 +523,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                 .background_gradient(subset=num_cols_overall, cmap="Oranges")
                 .format(precision=2)
             )
-            st.dataframe(styled_overall, use_container_width=True, height=250)
+            st.dataframe(styled_overall, use_container_width=True, height=220)
     
             st.markdown("---")
     
@@ -536,7 +539,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                     .background_gradient(subset=num_cols_safe, cmap="Greens")
                     .format(precision=2)
                 )
-                st.dataframe(styled_safe, use_container_width=True, height=250)
+                st.dataframe(styled_safe, use_container_width=True, height=220)
     
             st.markdown("---")
     
@@ -552,7 +555,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                     .background_gradient(subset=num_cols_punt, cmap="Reds")
                     .format(precision=2)
                 )
-                st.dataframe(styled_punt, use_container_width=True, height=250)
+                st.dataframe(styled_punt, use_container_width=True, height=220)
 
 
 
