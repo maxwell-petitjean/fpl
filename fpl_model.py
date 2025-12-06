@@ -15,7 +15,7 @@ import pulp
 # ============= CONFIG =============
 GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/heads/main/"
 # upcoming gw
-VAR_GW = 15
+VAR_GW = 16
 VAR_GW0,VAR_GW1,VAR_GW2,VAR_GW3,VAR_GW4 = VAR_GW-1,VAR_GW-2,VAR_GW-3,VAR_GW-4,VAR_GW-5
 VAR_GW5,VAR_GW6,VAR_GW7,VAR_GW8,VAR_GW9 = VAR_GW-6,VAR_GW-7,VAR_GW-8,VAR_GW-9,VAR_GW-10
 VAR_GW_LY = 38-(1)
