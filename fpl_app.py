@@ -366,7 +366,6 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 1 — Final Squad ---
     with tab1:
-        st.subheader("🧩 Final Squad")
 
         # Transfer impact vs current team if we have an FPL ID
         current_names = st.session_state.current_names or []
@@ -413,8 +412,6 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                 else:
                     st.dataframe(added_df.round(2), use_container_width=True, height=220)
 
-        st.markdown("---")
-        
         # === Weekly points breakdown (XI vs bench) ===
         st.markdown("### 📆 Weekly points breakdown")
 
