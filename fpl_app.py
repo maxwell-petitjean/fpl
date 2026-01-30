@@ -461,8 +461,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
             weekly_df = pd.DataFrame(breakdown_rows)
 
-                        # === Total Points
-            st.markdown("### 📆 Total Points")
+            # === Total Points
 
             if "weekly_df" in locals() and not weekly_df.empty:
                 # totals across the selected weeks
