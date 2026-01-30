@@ -125,6 +125,22 @@ with st.expander("⚙️ Input Parameters", expanded=True):
 if "picks_data" not in st.session_state:
     st.session_state.picks_data = []
 
+if "transfers_data" not in st.session_state:
+    st.session_state.transfers_data = []
+
+if fpl_id_input:
+    try:
+        transfers_url = f"https://fantasy.premierleague.com/api/entry/{fpl_id_input}/transfers"
+        tr = requests.get(transfers_url, timeout=10)
+        if tr.status_code == 200:
+            st.session_state.transfers_data = tr.json() or []
+        else:
+            st.session_state.transfers_data = []
+    except Exception:
+        st.session_state.transfers_data = []
+else:
+    st.session_state.transfers_data = []
+
 if fpl_id_input:
     try:
         # Use last completed GW (VAR_GW0) to fetch current squad
@@ -159,6 +175,7 @@ for k, v in {
     "fdr_att": None,
     "fdr_def": None,
     "current_names": [],
+    "current_ids": [],
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
@@ -177,6 +194,7 @@ if run_clicked:
                 fdr_att,
                 fdr_def,
                 current_names,
+                current_ids,
             ) = run_model(
                 fpl_id=fpl_id_input if fpl_id_input else None,
                 transfers=transfers_input or 0,
@@ -194,6 +212,7 @@ if run_clicked:
             st.session_state.fdr_att = fdr_att
             st.session_state.fdr_def = fdr_def
             st.session_state.current_names = current_names
+            st.session_state.current_ids = current_ids
 
         except Exception as e:
             st.error(f"Something went wrong while running the model: {e}")
@@ -201,7 +220,6 @@ if run_clicked:
 # ======= Helper renderers for tabs 3–5 (always available) =======
 
 def render_research_tab(tab):
-    from fpl_model import run_model  # ensure available inside function if not imported globally
 
     with tab:
         st.subheader("🔬 Research Players Yourself")
@@ -224,6 +242,7 @@ def render_research_tab(tab):
                         base_fdr_att,
                         base_fdr_def,
                         _base_current_names,
+                        _base_current_ids,
                     ) = run_model(
                         fpl_id=None,
                         transfers=0,
