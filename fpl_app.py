@@ -477,7 +477,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         else:
             st.info("No weekly breakdown available.")
 
-
+        ft = st.session_state.final_team.copy()
 
 
         # Styled final team table
