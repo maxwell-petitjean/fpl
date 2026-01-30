@@ -9,7 +9,7 @@ GITHUB_BASE = "https://raw.githubusercontent.com/maxwell-petitjean/fpl/refs/head
 #auto upcoming gw
 URL0 = 'https://fantasy.premierleague.com/api/fixtures?future=1'
 json0 = requests.get(URL0).json()
-nxtGw = pd.DataFrame(json2)[['event']]
+nxtGw = pd.DataFrame(json0)[['event']]
 VAR_GW = pd.to_numeric(nxtGw["event"], errors="coerce").min()
 
 #manual upcoming gw
