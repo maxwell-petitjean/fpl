@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import requests
 
-from fpl_model import (
+from streamlit_model import (
     run_model,
     VAR_GW,
     VAR_GW0,
