@@ -349,17 +349,67 @@ def run_model(
     player_output = player_output.fillna(0)
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
-    output = players10[['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
+    output = players10[['id','name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
     output.columns = ['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
     output = output.sort_values(by='predicted_points', ascending=False)
 
+    ----------------------------------------------------------------------------------------------------------
     # ---- FPL ID Squad Fetch (from picks_data) ----
-    current_names = []
-    if fpl_id and picks_data and optimisation_mode != "gw1_only":
-        player_ids = [p['element'] for p in picks_data]
-        players_data = json1['elements']  # already loaded above
-        id_to_name = {p['id']: f"{p['first_name']} {p['second_name']}" for p in players_data}
-        current_names = [id_to_name[pid] for pid in player_ids if pid in id_to_name]
+    current_ids = [p["element"] for p in picks_data] if picks_data else []
+    current_id_set = set(current_ids)
+
+    transfers_data = st.session_state.get("transfers_data", []) or []
+
+    # map: element -> (latest_time, "in"/"out", cost)
+    latest_move = {}
+    for t in transfers_data:
+        ts = t.get("time", "")
+        ein, eout = t.get("element_in"), t.get("element_out")
+        ein_cost, eout_cost = t.get("element_in_cost"), t.get("element_out_cost")
+
+        if ein is not None:
+            prev = latest_move.get(ein)
+            if prev is None or ts > prev[0]:
+                latest_move[ein] = (ts, "in", ein_cost)
+
+        if eout is not None:
+            prev = latest_move.get(eout)
+            if prev is None or ts > prev[0]:
+                latest_move[eout] = (ts, "out", eout_cost)
+
+    # purchase price for current squad (tenths)
+    now_cost_by_element = dict(zip(output["element"], output["cost"]))
+
+    purchase_price_by_element = {}
+    for pid in current_ids:
+        now = now_cost_by_element.get(pid)
+        mv = latest_move.get(pid)
+
+        if mv and mv[1] == "in" and mv[2] is not None:
+            purchase_price_by_element[pid] = int(mv[2])  # known buy-in cost
+        else:
+            # unknown (likely GW1 initial squad) -> safest assumption
+            purchase_price_by_element[pid] = int(now) if now is not None else 0
+
+
+    #selling price function
+    def selling_price(now_cost: int, purchase_price: int) -> int:
+    if now_cost <= purchase_price:
+        return now_cost
+    return purchase_price + (now_cost - purchase_price) // 2
+
+    sell_price_by_element = {}
+    for pid in current_ids:
+        now = int(now_cost_by_element.get(pid, 0))
+        pp = int(purchase_price_by_element.get(pid, now))
+        sell_price_by_element[pid] = selling_price(now, pp)
+
+    output["is_current"] = output["element"].isin(current_id_set).astype(int)
+    output["sell_price"] = output["element"].map(sell_price_by_element).fillna(0).astype(int)
+
+    current_purchase_total = sum(purchase_price_by_element.values()) if purchase_price_by_element else budget
+    bank = max(0, int(budget - current_purchase_total))
+
 
     # ---- LP Optimisation ----
     prob = pulp.LpProblem("FPL_Team_Selection", pulp.LpMaximize)
@@ -386,7 +436,20 @@ def run_model(
     prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'FWD') == 3
 
     # Budget
-    prob += pulp.lpSum(output.loc[i, 'cost'] * player_vars[i] for i in output.index) <= budget
+    spent_on_buys = pulp.lpSum(
+    output.loc[i, "cost"] * player_vars[i]
+    for i in output.index
+    if output.loc[i, "is_current"] == 0
+    )
+
+    money_from_sells = pulp.lpSum(
+        output.loc[i, "sell_price"] * (1 - player_vars[i])
+        for i in output.index
+        if output.loc[i, "is_current"] == 1
+    )
+
+    prob += spent_on_buys <= bank + money_from_sells
+
 
     # Max 3 players per team
     for team in output['team'].unique():
@@ -405,10 +468,10 @@ def run_model(
 
     # --- HARD TRANSFER LIMIT relative to your current team
     # Only in normal mode (not Free Hit). Only consider current players in `output`.
-    if optimisation_mode != "gw1_only" and current_names:
-        current_idx = [i for i in output.index if output.loc[i,'name'] in set(current_names)]
-        kept_target = max(0, len(current_idx) - transfers)   # exactly this many current players must remain
-        prob += pulp.lpSum(player_vars[i] for i in current_idx) == kept_target
+    if optimisation_mode != "gw1_only" and current_ids:
+        current_idx = [i for i in output.index if output.loc[i, "element"] in current_id_set]
+        kept_target = max(0, len(current_idx) - transfers)
+        prob += pulp.lpSum(player_vars[i] for i in current_idx) >= kept_target
 
     # --- Weekly starting XI (link & formation)
     for w in weeks:
@@ -429,9 +492,10 @@ def run_model(
     # Solve
     _ = prob.solve(pulp.PULP_CBC_CMD(msg=False))
 
-    selected_team = output[[player_vars[i].value() == 1 for i in output.index]].copy()
+    selected_mask = [pulp.value(player_vars[i]) == 1 for i in output.index]
+    selected_team = output.loc[selected_mask].copy()
     selected_team['starting_weeks'] = selected_team.index.map(lambda i: ', '.join([w for w in weeks if week_vars[w][i].value() == 1]))
     selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
     selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6,'starting_weeks']]
 
-    return selected_team, output, player_output, fixtures_att1, fixtures_def1, current_names
+    return selected_team, output, player_output, fixtures_att1, fixtures_def1, current_names, current_ids
