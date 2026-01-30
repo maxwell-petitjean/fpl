@@ -417,7 +417,22 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
             # === Total Points
             st.markdown("### 📆 Total Points")
-            ft = st.session_state.final_team.copy()
+            # Basic summary
+            total_cost = team_df["cost"].sum() / 10.0
+            if optimisation_mode_input == "free_hit":
+                total_points = team_df[VGW_NAME_1].sum()
+                opt_desc = f"Maximising points in **{VGW_NAME_1.upper()}** only."
+            else:
+                # Sum across all GW columns in the optimised window
+                gw_cols = [VGW_NAME_1, VGW_NAME_2, VGW_NAME_3, VGW_NAME_4, VGW_NAME_5, VGW_NAME_6]
+                gw_cols = [c for c in gw_cols if c in team_df.columns]
+                total_points = team_df[gw_cols].sum().sum()
+                opt_desc = "Maximising **total points over the next 6 gameweeks**."
+    
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Total cost (£m)", f"{total_cost:.1f}")
+            c2.metric("Projected points", f"{total_points:.1f}")
+            c3.write(opt_desc)
             
             st.markdown("---")
             
