@@ -414,27 +414,6 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                     st.dataframe(added_df.round(2), use_container_width=True, height=220)
 
             st.markdown("---")
-
-            # === Total Points
-            st.markdown("### 📆 Total Points")
-            # Basic summary
-            total_cost = team_df["cost"].sum() / 10.0
-            if optimisation_mode_input == "free_hit":
-                total_points = team_df[VGW_NAME_1].sum()
-                opt_desc = f"Maximising points in **{VGW_NAME_1.upper()}** only."
-            else:
-                # Sum across all GW columns in the optimised window
-                gw_cols = [VGW_NAME_1, VGW_NAME_2, VGW_NAME_3, VGW_NAME_4, VGW_NAME_5, VGW_NAME_6]
-                gw_cols = [c for c in gw_cols if c in team_df.columns]
-                total_points = team_df[gw_cols].sum().sum()
-                opt_desc = "Maximising **total points over the next 6 gameweeks**."
-    
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Total cost (£m)", f"{total_cost:.1f}")
-            c2.metric("Projected points", f"{total_points:.1f}")
-            c3.write(opt_desc)
-            
-            st.markdown("---")
             
             # === Weekly points breakdown (XI vs bench) ===
             st.markdown("### 📆 Weekly points breakdown")
@@ -480,7 +459,33 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                     "Squad total": round(squad_total, 2),
                 })
 
-                weekly_df = pd.DataFrame(breakdown_rows)
+            weekly_df = pd.DataFrame(breakdown_rows)
+
+                        # === Total Points
+            st.markdown("### 📆 Total Points")
+
+            if "weekly_df" in locals() and not weekly_df.empty:
+                # totals across the selected weeks
+                total_xi = weekly_df["XI points"].sum()
+                total_bench = weekly_df["Bench points"].sum()
+                total_squad = weekly_df["Squad total"].sum()
+
+                n_weeks = len(weekly_df)
+                avg_squad = total_squad / n_weeks if n_weeks else 0
+
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Total (XI)", f"{total_xi:.2f}")
+                c2.metric("Total (Bench)", f"{total_bench:.2f}")
+                c3.metric("Total (Squad)", f"{total_squad:.2f}")
+                c4.metric("Avg / week", f"{avg_squad:.2f}")
+
+                # optional: a single-line summary under the metrics
+                st.caption(
+                    f"Across **{n_weeks}** week(s): XI contributes **{(total_xi/total_squad*100 if total_squad else 0):.0f}%**, "
+                    f"bench **{(total_bench/total_squad*100 if total_squad else 0):.0f}%**."
+                )
+            else:
+                st.info("No weekly breakdown available yet — run optimisation to see totals.")
 
         # 🔥 Bench Boost Potential cue via colour:
         # - Bench points column gets a gradient
