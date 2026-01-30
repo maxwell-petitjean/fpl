@@ -413,117 +413,117 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                 else:
                     st.dataframe(added_df.round(2), use_container_width=True, height=220)
 
-            st.markdown("---")
-            
-            # === Weekly points breakdown (XI vs bench) ===
-            st.markdown("### 📆 Weekly points breakdown")
+        st.markdown("---")
+        
+        # === Weekly points breakdown (XI vs bench) ===
+        st.markdown("### 📆 Weekly points breakdown")
 
-            # Make sure we can reference the team data
-            team_df = st.session_state.final_team.copy()
+        # Make sure we can reference the team data
+        team_df = st.session_state.final_team.copy()
 
-            # Decide which weeks to show
-            if optimisation_mode_input == "gw1_only":
-                weeks_for_breakdown = [VGW_NAME_1]
-            else:
-                weeks_for_breakdown = [
-                    VGW_NAME_1, VGW_NAME_2, VGW_NAME_3,
-                    VGW_NAME_4, VGW_NAME_5, VGW_NAME_6
-                ]
+        # Decide which weeks to show
+        if optimisation_mode_input == "gw1_only":
+            weeks_for_breakdown = [VGW_NAME_1]
+        else:
+            weeks_for_breakdown = [
+                VGW_NAME_1, VGW_NAME_2, VGW_NAME_3,
+                VGW_NAME_4, VGW_NAME_5, VGW_NAME_6
+            ]
 
-            # Only keep weeks that actually exist in the dataframe
-            weeks_for_breakdown = [w for w in weeks_for_breakdown if w in team_df.columns]
+        # Only keep weeks that actually exist in the dataframe
+        weeks_for_breakdown = [w for w in weeks_for_breakdown if w in team_df.columns]
 
-            def is_starter_for_week(row, week_name: str) -> bool:
-                sw = row.get("starting_weeks", "")
-                if not isinstance(sw, str) or not sw.strip():
-                    return False
-                weeks_list = [x.strip() for x in sw.split(",") if x.strip()]
-                return week_name in weeks_list
+        def is_starter_for_week(row, week_name: str) -> bool:
+            sw = row.get("starting_weeks", "")
+            if not isinstance(sw, str) or not sw.strip():
+                return False
+            weeks_list = [x.strip() for x in sw.split(",") if x.strip()]
+            return week_name in weeks_list
 
-            breakdown_rows = []
+        breakdown_rows = []
 
-            for w in weeks_for_breakdown:
-                starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
+        for w in weeks_for_breakdown:
+            starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
 
-                # get row-wise projected points (replace NaN with 0)
-                gw_points = pd.to_numeric(team_df[w], errors="coerce").fillna(0)
+            # get row-wise projected points (replace NaN with 0)
+            gw_points = pd.to_numeric(team_df[w], errors="coerce").fillna(0)
 
-                xi_points = gw_points[starter_mask].sum()
-                bench_points = gw_points[~starter_mask].sum()
-                squad_total = gw_points.sum()
+            xi_points = gw_points[starter_mask].sum()
+            bench_points = gw_points[~starter_mask].sum()
+            squad_total = gw_points.sum()
 
-                breakdown_rows.append({
-                    "Week": w.upper(),
-                    "XI points": round(xi_points, 2),
-                    "Bench points": round(bench_points, 2),
-                    "Squad total": round(squad_total, 2),
-                })
+            breakdown_rows.append({
+                "Week": w.upper(),
+                "XI points": round(xi_points, 2),
+                "Bench points": round(bench_points, 2),
+                "Squad total": round(squad_total, 2),
+            })
 
-            weekly_df = pd.DataFrame(breakdown_rows)
+        weekly_df = pd.DataFrame(breakdown_rows)
 
-            # === Total Points
+        # === Total Points
 
-            if "weekly_df" in locals() and not weekly_df.empty:
-                # totals across the selected weeks
-                total_xi = weekly_df["XI points"].sum()
-                total_bench = weekly_df["Bench points"].sum()
-                total_squad = weekly_df["Squad total"].sum()
+        if "weekly_df" in locals() and not weekly_df.empty:
+            # totals across the selected weeks
+            total_xi = weekly_df["XI points"].sum()
+            total_bench = weekly_df["Bench points"].sum()
+            total_squad = weekly_df["Squad total"].sum()
 
-                n_weeks = len(weekly_df)
-                avg_squad = total_squad / n_weeks if n_weeks else 0
+            n_weeks = len(weekly_df)
+            avg_squad = total_squad / n_weeks if n_weeks else 0
 
-                c1, c2, c3, c4 = st.columns(4)
-                c1.metric("Total (XI)", f"{total_xi:.2f}")
-                c2.metric("Total (Bench)", f"{total_bench:.2f}")
-                c3.metric("Total (Squad)", f"{total_squad:.2f}")
-                c4.metric("Avg / week", f"{avg_squad:.2f}")
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Total (XI)", f"{total_xi:.2f}")
+            c2.metric("Total (Bench)", f"{total_bench:.2f}")
+            c3.metric("Total (Squad)", f"{total_squad:.2f}")
+            c4.metric("Avg / week", f"{avg_squad:.2f}")
 
-                # optional: a single-line summary under the metrics
-                st.caption(
-                    f"Across **{n_weeks}** week(s): XI contributes **{(total_xi/total_squad*100 if total_squad else 0):.0f}%**, "
-                    f"bench **{(total_bench/total_squad*100 if total_squad else 0):.0f}%**."
-                )
-            else:
-                st.info("No weekly breakdown available yet — run optimisation to see totals.")
+            # optional: a single-line summary under the metrics
+            st.caption(
+                f"Across **{n_weeks}** week(s): XI contributes **{(total_xi/total_squad*100 if total_squad else 0):.0f}%**, "
+                f"bench **{(total_bench/total_squad*100 if total_squad else 0):.0f}%**."
+            )
+        else:
+            st.info("No weekly breakdown available yet — run optimisation to see totals.")
 
-            # 🔥 Bench Boost Potential cue via colour:
-            # - Bench points column gets a gradient
-            # - Darker = better bench boost week
-            if not weekly_df.empty:
-                styled_weekly = (
-                    weekly_df.style
-                    .background_gradient(subset=["Bench points"], cmap="Purples")
-                    .format(precision=2)
-                )
-                st.dataframe(
-                    styled_weekly,
-                    use_container_width=True,
-                )
-            else:
-                st.info("No weekly breakdown available.")
-    
-    
-            # Styled final team table
-            st.markdown("### 📋 Optimised 15-man Squad")
-    
-            st.session_state.final_team = st.session_state.final_team.reset_index(drop=True)
-            numeric_cols1 = st.session_state.final_team.select_dtypes(include=[np.number]).columns
-            styled_df = (
-                st.session_state.final_team.style
-                .applymap(highlight_pos, subset=["pos"])
-                .background_gradient(subset=numeric_cols1, cmap="YlGnBu")
+        # 🔥 Bench Boost Potential cue via colour:
+        # - Bench points column gets a gradient
+        # - Darker = better bench boost week
+        if not weekly_df.empty:
+            styled_weekly = (
+                weekly_df.style
+                .background_gradient(subset=["Bench points"], cmap="Purples")
                 .format(precision=2)
             )
-            st.dataframe(styled_df, use_container_width=True, height=600)
-    
-            # Download button
-            csv = st.session_state.final_team.to_csv(index=False)
-            st.download_button(
-                "⬇️ Download squad as CSV",
-                csv,
-                "squad.csv",
-                "text/csv",
+            st.dataframe(
+                styled_weekly,
+                use_container_width=True,
             )
+        else:
+            st.info("No weekly breakdown available.")
+
+
+        # Styled final team table
+        st.markdown("### 📋 Optimised 15-man Squad")
+
+        st.session_state.final_team = st.session_state.final_team.reset_index(drop=True)
+        numeric_cols1 = st.session_state.final_team.select_dtypes(include=[np.number]).columns
+        styled_df = (
+            st.session_state.final_team.style
+            .applymap(highlight_pos, subset=["pos"])
+            .background_gradient(subset=numeric_cols1, cmap="YlGnBu")
+            .format(precision=2)
+        )
+        st.dataframe(styled_df, use_container_width=True, height=600)
+
+        # Download button
+        csv = st.session_state.final_team.to_csv(index=False)
+        st.download_button(
+            "⬇️ Download squad as CSV",
+            csv,
+            "squad.csv",
+            "text/csv",
+        )
 
     # --- Tab 2 — Captain Ranking (Safe vs Punt, Top 5 Each) ---
     with tab2:
