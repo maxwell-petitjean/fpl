@@ -213,6 +213,10 @@ def render_research_tab(tab):
             with st.spinner("Building base player model (one-off)..."):
                 try:
                     # Neutral / global run:
+                    # - No FPL ID
+                    # - No transfer limit constraint
+                    # - No include/exclude filters
+                    # - Standard budget just to satisfy the optimiser
                     (
                         _base_final_team,
                         _base_output,
@@ -264,6 +268,7 @@ def render_research_tab(tab):
             .format(precision=2)
         )
         st.dataframe(styled_raw, use_container_width=True, height=800)
+
 
 
 def render_fdr_tab(tab):
@@ -361,7 +366,6 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
     # --- Tab 1 — Final Squad ---
     with tab1:
-        st.subheader("🧩 Final Squad")
 
         # Transfer impact vs current team if we have an FPL ID
         current_names = st.session_state.current_names or []
@@ -411,6 +415,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         # === Weekly points breakdown (XI vs bench) ===
         st.markdown("### 📆 Weekly points breakdown")
 
+        # Make sure we can reference the team data
         team_df = st.session_state.final_team.copy()
 
         # Decide which weeks to show
@@ -437,6 +442,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
         for w in weeks_for_breakdown:
             starter_mask = team_df.apply(is_starter_for_week, axis=1, week_name=w)
 
+            # get row-wise projected points (replace NaN with 0)
             gw_points = pd.to_numeric(team_df[w], errors="coerce").fillna(0)
 
             xi_points = gw_points[starter_mask].sum()
@@ -452,6 +458,34 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
         weekly_df = pd.DataFrame(breakdown_rows)
 
+        # === Total Points
+
+        if "weekly_df" in locals() and not weekly_df.empty:
+            # totals across the selected weeks
+            total_xi = weekly_df["XI points"].sum()
+            total_bench = weekly_df["Bench points"].sum()
+            total_squad = weekly_df["Squad total"].sum()
+
+            n_weeks = len(weekly_df)
+            avg_squad = total_squad / n_weeks if n_weeks else 0
+
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Total (XI)", f"{total_xi:.2f}")
+            c2.metric("Total (Bench)", f"{total_bench:.2f}")
+            c3.metric("Total (Squad)", f"{total_squad:.2f}")
+            c4.metric("Avg / week", f"{avg_squad:.2f}")
+
+            # optional: a single-line summary under the metrics
+            st.caption(
+                f"Across **{n_weeks}** week(s): XI contributes **{(total_xi/total_squad*100 if total_squad else 0):.0f}%**, "
+                f"bench **{(total_bench/total_squad*100 if total_squad else 0):.0f}%**."
+            )
+        else:
+            st.info("No weekly breakdown available yet — run optimisation to see totals.")
+
+        # 🔥 Bench Boost Potential cue via colour:
+        # - Bench points column gets a gradient
+        # - Darker = better bench boost week
         if not weekly_df.empty:
             styled_weekly = (
                 weekly_df.style
@@ -464,6 +498,7 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             )
         else:
             st.info("No weekly breakdown available.")
+
 
         # Styled final team table
         st.markdown("### 📋 Optimised 15-man Squad")
@@ -597,6 +632,8 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
                     .format(precision=2)
                 )
                 st.dataframe(styled_punt, use_container_width=True, height=220)
+
+
 
     # --- Tab 3–5 always rendered via helpers ---
     render_research_tab(tab3)
