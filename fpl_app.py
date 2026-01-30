@@ -486,44 +486,44 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             else:
                 st.info("No weekly breakdown available yet — run optimisation to see totals.")
 
-        # 🔥 Bench Boost Potential cue via colour:
-        # - Bench points column gets a gradient
-        # - Darker = better bench boost week
-        if not weekly_df.empty:
-            styled_weekly = (
-                weekly_df.style
-                .background_gradient(subset=["Bench points"], cmap="Purples")
+            # 🔥 Bench Boost Potential cue via colour:
+            # - Bench points column gets a gradient
+            # - Darker = better bench boost week
+            if not weekly_df.empty:
+                styled_weekly = (
+                    weekly_df.style
+                    .background_gradient(subset=["Bench points"], cmap="Purples")
+                    .format(precision=2)
+                )
+                st.dataframe(
+                    styled_weekly,
+                    use_container_width=True,
+                )
+            else:
+                st.info("No weekly breakdown available.")
+    
+    
+            # Styled final team table
+            st.markdown("### 📋 Optimised 15-man Squad")
+    
+            st.session_state.final_team = st.session_state.final_team.reset_index(drop=True)
+            numeric_cols1 = st.session_state.final_team.select_dtypes(include=[np.number]).columns
+            styled_df = (
+                st.session_state.final_team.style
+                .applymap(highlight_pos, subset=["pos"])
+                .background_gradient(subset=numeric_cols1, cmap="YlGnBu")
                 .format(precision=2)
             )
-            st.dataframe(
-                styled_weekly,
-                use_container_width=True,
+            st.dataframe(styled_df, use_container_width=True, height=600)
+    
+            # Download button
+            csv = st.session_state.final_team.to_csv(index=False)
+            st.download_button(
+                "⬇️ Download squad as CSV",
+                csv,
+                "squad.csv",
+                "text/csv",
             )
-        else:
-            st.info("No weekly breakdown available.")
-
-
-        # Styled final team table
-        st.markdown("### 📋 Optimised 15-man Squad")
-
-        st.session_state.final_team = st.session_state.final_team.reset_index(drop=True)
-        numeric_cols1 = st.session_state.final_team.select_dtypes(include=[np.number]).columns
-        styled_df = (
-            st.session_state.final_team.style
-            .applymap(highlight_pos, subset=["pos"])
-            .background_gradient(subset=numeric_cols1, cmap="YlGnBu")
-            .format(precision=2)
-        )
-        st.dataframe(styled_df, use_container_width=True, height=600)
-
-        # Download button
-        csv = st.session_state.final_team.to_csv(index=False)
-        st.download_button(
-            "⬇️ Download squad as CSV",
-            csv,
-            "squad.csv",
-            "text/csv",
-        )
 
     # --- Tab 2 — Captain Ranking (Safe vs Punt, Top 5 Each) ---
     with tab2:
