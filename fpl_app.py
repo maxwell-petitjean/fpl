@@ -415,7 +415,13 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
 
             st.markdown("---")
 
-                # === Weekly points breakdown (XI vs bench) ===
+            # === Total Points
+            st.markdown("### 📆 Total Points")
+            ft = st.session_state.final_team.copy()
+            
+            st.markdown("---")
+            
+            # === Weekly points breakdown (XI vs bench) ===
             st.markdown("### 📆 Weekly points breakdown")
 
             # Make sure we can reference the team data
@@ -476,8 +482,6 @@ if st.session_state.final_team is not None and st.session_state.raw_output is no
             )
         else:
             st.info("No weekly breakdown available.")
-
-        ft = st.session_state.final_team.copy()
 
 
         # Styled final team table
