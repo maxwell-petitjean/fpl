@@ -238,11 +238,21 @@ def render_research_tab(tab):
         if st.session_state.player_output is None:
             with st.spinner("Building base player model (one-off)..."):
                 try:
-                    # Neutral / global run:
-                    # - No FPL ID
-                    # - No transfer limit constraint
-                    # - No include/exclude filters
-                    # - Standard budget just to satisfy the optimiser
+                    result = run_model(
+                        fpl_id=None,
+                        transfers=0,
+                        exclude_names=[],
+                        exclude_teams=[],
+                        include_names=[],
+                        budget=1000,
+                        picks_data=[],
+                        transfers_data=[],              # explicit
+                        optimisation_mode="next_6_gw",
+                    )
+
+                    if result is None:
+                        raise ValueError("Base run_model returned None. Check fpl_model for an early return or failed solve.")
+
                     (
                         _base_final_team,
                         _base_output,
@@ -250,18 +260,10 @@ def render_research_tab(tab):
                         base_fdr_att,
                         base_fdr_def,
                         *_,
-                    ) = run_model(
-                        fpl_id=None,
-                        transfers=0,
-                        exclude_names=[],
-                        exclude_teams=[],
-                        include_names=[],
-                        budget=1000,          # neutral budget
-                        picks_data=[],
-                        optimisation_mode="next_6_gw",
-                    )
+                    ) = result  # swallow any extra returns
 
                     st.session_state.player_output = base_player_output
+
                     # Also pre-populate FDR so the Fixture Difficulty tab works too
                     if st.session_state.fdr_att is None:
                         st.session_state.fdr_att = base_fdr_att
@@ -270,7 +272,9 @@ def render_research_tab(tab):
 
                 except Exception as e:
                     st.error(f"Could not pre-load research data: {e}")
+                    st.exception(e)   # show full traceback
                     return
+        
 
         # If still no data, bail gracefully
         if st.session_state.player_output is None:
