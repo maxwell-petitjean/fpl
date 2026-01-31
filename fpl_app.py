@@ -203,6 +203,7 @@ if run_clicked:
                 include_names=include_names_input,
                 budget=budget_input,
                 picks_data=st.session_state.picks_data,
+                transfers_data=st.session_state.get("transfers_data", []),
                 optimisation_mode=optimisation_mode_input,
             )
 
