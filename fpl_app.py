@@ -241,8 +241,7 @@ def render_research_tab(tab):
                         base_player_output,
                         base_fdr_att,
                         base_fdr_def,
-                        _base_current_names,
-                        _base_current_ids,
+                        *_,
                     ) = run_model(
                         fpl_id=None,
                         transfers=0,
