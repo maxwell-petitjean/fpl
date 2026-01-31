@@ -52,15 +52,22 @@ def load_csv(filename):
 
 
 def run_model(
-    fpl_id,
-    transfers,
-    exclude_names,
-    exclude_teams,
-    include_names,
-    budget,
-    picks_data,
-    optimisation_mode="next_6_gw",   # "next_6_gw" or "gw1_only" (Free Hit)
+    fpl_id=None,
+    transfers=0,
+    exclude_names=None,
+    exclude_teams=None,
+    include_names=None,
+    budget=1000,
+    picks_data=None,
+    transfers_data=None,
+    optimisation_mode="next_6_gw",   # "next_6_gw" or "gw1_only"
 ):
+    # ---- Safe defaults ----
+    exclude_names = exclude_names or []
+    exclude_teams = exclude_teams or []
+    include_names = include_names or []
+    picks_data = picks_data or []
+    transfers_data = transfers_data or []
 
     # ---- Load API data ----
     json1 = requests.get(URL1).json()
