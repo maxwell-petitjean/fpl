@@ -187,15 +187,7 @@ st.markdown("➡️ **Press the button above to generate your optimised squad an
 if run_clicked:
     with st.spinner("Running optimisation..."):
         try:
-            (
-                final_team,
-                output,
-                player_output,
-                fdr_att,
-                fdr_def,
-                current_names,
-                current_ids,
-            ) = run_model(
+            result = run_model(
                 fpl_id=fpl_id_input if fpl_id_input else None,
                 transfers=transfers_input or 0,
                 exclude_names=exclude_names_input,
@@ -207,6 +199,20 @@ if run_clicked:
                 optimisation_mode=optimisation_mode_input,
             )
 
+            if result is None:
+                raise ValueError("run_model returned None (no output). Check fpl_model.py for an early return or failed solve.")
+
+            (
+                final_team,
+                output,
+                player_output,
+                fdr_att,
+                fdr_def,
+                current_names,
+                current_ids,
+                *_,
+            ) = result
+
             st.session_state.final_team = final_team
             st.session_state.raw_output = output
             st.session_state.player_output = player_output
@@ -217,6 +223,7 @@ if run_clicked:
 
         except Exception as e:
             st.error(f"Something went wrong while running the model: {e}")
+            st.exception(e)
 
 # ======= Helper renderers for tabs 3–5 (always available) =======
 
