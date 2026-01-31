@@ -356,11 +356,20 @@ def run_model(
     player_output = player_output.fillna(0)
     player_output = player_output.sort_values(by='predicted_points', ascending=False)
 
-    output = players10[['id','name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']]
-    output.columns = ['name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
-    output = output.sort_values(by='predicted_points', ascending=False)
+    output = players10[['id','name','team','pos','pos_id','cost','ownership','predicted_points','xm','fdr','gw1','gw2','gw3','gw4','gw5','gw6']].copy()
+    output = output.rename(columns={
+        "id": "element",
+        "gw1": VGW_NAME_1,
+        "gw2": VGW_NAME_2,
+        "gw3": VGW_NAME_3,
+        "gw4": VGW_NAME_4,
+        "gw5": VGW_NAME_5,
+        "gw6": VGW_NAME_6,
+    })
+    output = output.sort_values(by="predicted_points", ascending=False)
 
-    ----------------------------------------------------------------------------------------------------------
+
+    #----------------------------------------------------------------------------------------------------------
     # ---- FPL ID Squad Fetch (from picks_data) ----
 
     # ---- Current squad + derived sell prices (tenths) ----
