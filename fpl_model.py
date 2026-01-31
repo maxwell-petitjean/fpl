@@ -355,147 +355,69 @@ def run_model(
 
     ----------------------------------------------------------------------------------------------------------
     # ---- FPL ID Squad Fetch (from picks_data) ----
+
+    # ---- Current squad + derived sell prices (tenths) ----
     current_ids = [p["element"] for p in picks_data] if picks_data else []
     current_id_set = set(current_ids)
-
-    transfers_data = st.session_state.get("transfers_data", []) or []
-
-    # map: element -> (latest_time, "in"/"out", cost)
+    
+    # transfers_data should be passed into run_model; fallback to empty list
+    transfers_data = transfers_data or []
+    
+    # Map: element -> (latest_time, "in"/"out", cost_in_tenths)
     latest_move = {}
     for t in transfers_data:
         ts = t.get("time", "")
         ein, eout = t.get("element_in"), t.get("element_out")
         ein_cost, eout_cost = t.get("element_in_cost"), t.get("element_out_cost")
-
+    
         if ein is not None:
             prev = latest_move.get(ein)
             if prev is None or ts > prev[0]:
                 latest_move[ein] = (ts, "in", ein_cost)
-
+    
         if eout is not None:
             prev = latest_move.get(eout)
             if prev is None or ts > prev[0]:
                 latest_move[eout] = (ts, "out", eout_cost)
-
-    # purchase price for current squad (tenths)
+    
+    # Current now_cost map from bootstrap-static output (tenths)
+    # Requires output["element"] to exist (bootstrap id renamed to element)
     now_cost_by_element = dict(zip(output["element"], output["cost"]))
-
+    
+    # Purchase price for current squad (tenths)
+    # - If we have a transfer-in record, use that cost
+    # - Otherwise assume purchase price == now_cost (conservative)
     purchase_price_by_element = {}
     for pid in current_ids:
-        now = now_cost_by_element.get(pid)
+        now = now_cost_by_element.get(pid, 0)
         mv = latest_move.get(pid)
-
+    
         if mv and mv[1] == "in" and mv[2] is not None:
-            purchase_price_by_element[pid] = int(mv[2])  # known buy-in cost
+            purchase_price_by_element[pid] = int(mv[2])
         else:
-            # unknown (likely GW1 initial squad) -> safest assumption
-            purchase_price_by_element[pid] = int(now) if now is not None else 0
-
-
-    #selling price function
+            purchase_price_by_element[pid] = int(now)
+    
+    # Selling price rule (FPL):
+    # - If price fell or unchanged: sell == now
+    # - If price rose: sell == purchase + floor((now - purchase) / 2)
     def selling_price(now_cost: int, purchase_price: int) -> int:
-    if now_cost <= purchase_price:
-        return now_cost
-    return purchase_price + (now_cost - purchase_price) // 2
-
+        if now_cost <= purchase_price:
+            return now_cost
+        return purchase_price + (now_cost - purchase_price) // 2
+    
     sell_price_by_element = {}
     for pid in current_ids:
         now = int(now_cost_by_element.get(pid, 0))
         pp = int(purchase_price_by_element.get(pid, now))
         sell_price_by_element[pid] = selling_price(now, pp)
-
+    
+    # Attach current/sell info to output
     output["is_current"] = output["element"].isin(current_id_set).astype(int)
     output["sell_price"] = output["element"].map(sell_price_by_element).fillna(0).astype(int)
-
+    
+    # Derive bank (ITB) in tenths:
+    # bank = total_budget_cap - sum(purchase prices of current squad)
+    # Note: conservative for players never transferred in (we assume pp == now)
     current_purchase_total = sum(purchase_price_by_element.values()) if purchase_price_by_element else budget
     bank = max(0, int(budget - current_purchase_total))
 
-
-    # ---- LP Optimisation ----
-    prob = pulp.LpProblem("FPL_Team_Selection", pulp.LpMaximize)
-
-    # decision vars
-    player_vars = pulp.LpVariable.dicts("Player", output.index, 0, 1, pulp.LpBinary)
-
-    # weeks to optimise over
-    if optimisation_mode == "gw1_only":
-        weeks = [VGW_NAME_1]
-    else:
-        weeks = [VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6]
-
-    week_vars = {w: pulp.LpVariable.dicts(f"Week_{w}", output.index, 0, 1, pulp.LpBinary) for w in weeks}
-
-    # ---- Squad constraints ----
-    # Total squad size
-    prob += pulp.lpSum(player_vars[i] for i in output.index) == 15
-
-    # Positional quotas
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'GKP') == 2
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'DEF') == 5
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'MID') == 5
-    prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'pos'] == 'FWD') == 3
-
-    # Budget
-    spent_on_buys = pulp.lpSum(
-    output.loc[i, "cost"] * player_vars[i]
-    for i in output.index
-    if output.loc[i, "is_current"] == 0
-    )
-
-    money_from_sells = pulp.lpSum(
-        output.loc[i, "sell_price"] * (1 - player_vars[i])
-        for i in output.index
-        if output.loc[i, "is_current"] == 1
-    )
-
-    prob += spent_on_buys <= bank + money_from_sells
-
-
-    # Max 3 players per team
-    for team in output['team'].unique():
-        prob += pulp.lpSum(player_vars[i] for i in output.index if output.loc[i, 'team'] == team) <= 3
-
-    # --- Exclusions (hard)
-    for i in output.index:
-        if (output.loc[i,'name'] in exclude_names) or (output.loc[i,'team'] in exclude_teams):
-            prob += player_vars[i] == 0
-
-    # --- MUST INCLUDE (use your include_names list as hard locks)
-    must_include_set = set(n.strip() for n in include_names if n.strip())
-    for i in output.index:
-        if output.loc[i,'name'] in must_include_set:
-            prob += player_vars[i] == 1
-
-    # --- HARD TRANSFER LIMIT relative to your current team
-    # Only in normal mode (not Free Hit). Only consider current players in `output`.
-    if optimisation_mode != "gw1_only" and current_ids:
-        current_idx = [i for i in output.index if output.loc[i, "element"] in current_id_set]
-        kept_target = max(0, len(current_idx) - transfers)
-        prob += pulp.lpSum(player_vars[i] for i in current_idx) >= kept_target
-
-    # --- Weekly starting XI (link & formation)
-    for w in weeks:
-        for i in output.index:
-            prob += week_vars[w][i] <= player_vars[i]           # starter must be in squad
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index) == 11
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='GKP') == 1
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='DEF') >= 3
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='DEF') <= 5
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='MID') >= 2
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='MID') <= 5
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='FWD') >= 1
-        prob += pulp.lpSum(week_vars[w][i] for i in output.index if output.loc[i,'pos']=='FWD') <= 3
-
-    # --- Objective: starters only
-    prob += pulp.lpSum(output.loc[i, w] * week_vars[w][i] for w in weeks for i in output.index)
-
-    # Solve
-    _ = prob.solve(pulp.PULP_CBC_CMD(msg=False))
-
-    selected_mask = [pulp.value(player_vars[i]) == 1 for i in output.index]
-    selected_team = output.loc[selected_mask].copy()
-    selected_team['starting_weeks'] = selected_team.index.map(lambda i: ', '.join([w for w in weeks if week_vars[w][i].value() == 1]))
-    selected_team = selected_team.sort_values(by=['pos_id', 'cost', 'predicted_points'], ascending=[True, False, False])
-    selected_team = selected_team[['name','team','pos','cost','ownership','predicted_points','xm','fdr',VGW_NAME_1,VGW_NAME_2,VGW_NAME_3,VGW_NAME_4,VGW_NAME_5,VGW_NAME_6,'starting_weeks']]
-
-    return selected_team, output, player_output, fixtures_att1, fixtures_def1, current_names, current_ids
